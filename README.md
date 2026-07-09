@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="dedrisremasterd/menu-principale.jpg" alt="Warzone 2100 Remasterd — DedrisStudios" width="100%">
+  <img src="dedrisremasterd/copertina-per-readme.png" alt="Warzone 2100 Remasterd — DedrisStudios" width="100%">
 </p>
 
 <h1 align="center">
