@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="dedrisremasterd/copertina-per-readme.png" alt="Warzone 2100 Remasterd — DedrisStudios" width="100%">
-</p>
-
 <h1 align="center">
   <img src="icons/warzone2100.large.png" alt="Warzone 2100">
   <br />
