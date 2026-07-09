@@ -3393,6 +3393,28 @@ static void queueStructureBuildProgress(STRUCTURE *psStruct, BatchedMultiRectRen
 }
 
 /// Draw the health of structures and show enemy structures being targetted
+/// Draw a red corner-bracket box (in the style of the unit selection box) around a
+/// destroyable enemy object, using its stored screen position and a screen radius.
+static void drawEnemyTargetOutline(int screenX, int screenY, int screenR)
+{
+	if (screenR < 8) { screenR = 8; }
+	const int x0 = screenX - screenR, y0 = screenY - screenR;
+	const int x1 = screenX + screenR, y1 = screenY + screenR;
+	const int a = MAX(5, screenR / 3); // length of each L-shaped corner arm
+	const std::vector<glm::ivec4> lines = {
+		glm::ivec4(x0, y0, x0 + a, y0), glm::ivec4(x0, y0, x0, y0 + a),
+		glm::ivec4(x1, y0, x1 - a, y0), glm::ivec4(x1, y0, x1, y0 + a),
+		glm::ivec4(x1, y1, x1 - a, y1), glm::ivec4(x1, y1, x1, y1 - a),
+		glm::ivec4(x0, y1, x0 + a, y1), glm::ivec4(x0, y1, x0, y1 - a) };
+	iV_Lines(lines, WZCOL_RED);
+}
+
+/// True if player `p` is hostile to the local player (not self, not allied).
+static inline bool isEnemyOfLocalPlayer(int p)
+{
+	return p != selectedPlayer && !(alliancebits[selectedPlayer] & (1 << p));
+}
+
 static void	drawStructureSelections()
 {
 	STRUCTURE	*psStruct;
@@ -3437,6 +3459,20 @@ static void	drawStructureSelections()
 		}
 	}
 
+	/* Outline every visible enemy structure as a destroyable target */
+	for (int i = 0; i < MAX_PLAYERS; i++)
+	{
+		if (!isEnemyOfLocalPlayer(i)) { continue; }
+		for (const STRUCTURE *psS : gameWorld.objects.structures[i])
+		{
+			if (!psS->died && psS->sDisplay.frameNumber == currentGameFrame
+			    && psS->visibleForLocalDisplay() == UBYTE_MAX)
+			{
+				const int scale = MAX(psS->pStructureType->baseWidth, psS->pStructureType->baseBreadth);
+				drawEnemyTargetOutline(psS->sDisplay.screenX, psS->sDisplay.screenY, scale * 20);
+			}
+		}
+	}
 }
 
 static UDWORD	getTargettingGfx()
@@ -3702,6 +3738,11 @@ static void	drawDroidSelections()
 			}
 			if (!psDroid->died && psDroid->sDisplay.frameNumber == currentGameFrame)
 			{
+				/* Outline visible enemy droids as destroyable targets */
+				if (isEnemyOfLocalPlayer(i) && psDroid->visibleForLocalDisplay() == UBYTE_MAX)
+				{
+					drawEnemyTargetOutline(psDroid->sDisplay.screenX, psDroid->sDisplay.screenY, psDroid->sDisplay.screenR);
+				}
 				/* If it's selected */
 				if (psDroid->flags.test(OBJECT_FLAG_TARGETED) && psDroid->visibleForLocalDisplay() == UBYTE_MAX)
 				{
@@ -3716,6 +3757,12 @@ static void	drawDroidSelections()
 	{
 		if (!psFeature->died && psFeature->sDisplay.frameNumber == currentGameFrame)
 		{
+			/* Outline destroyable features (things you can attack) as targets */
+			if (psFeature->psStats->damageable)
+			{
+				const int scale = MAX(psFeature->psStats->baseWidth, psFeature->psStats->baseBreadth);
+				drawEnemyTargetOutline(psFeature->sDisplay.screenX, psFeature->sDisplay.screenY, scale * 20);
+			}
 			if (psFeature->flags.test(OBJECT_FLAG_TARGETED))
 			{
 				iV_DrawImage(IntImages, getTargettingGfx(), psFeature->sDisplay.screenX, psFeature->sDisplay.screenY);
