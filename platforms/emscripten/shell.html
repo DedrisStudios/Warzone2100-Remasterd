@@ -354,11 +354,14 @@
   </div>
 
 <style id="wz-ipad-minimal">
-  /* iPad build: minimal launch screen — only the Play button */
+  /* iPad build: minimal launch & post-exit screens — only the Play button */
+  html, body.text-bg-dark { background-color: #000 !important; }
   header.mb-auto, footer.mt-auto { display: none !important; }
   .cover-container { justify-content: center !important; }
   #launch-game > *:not(.wz-keep) { display: none !important; }
-  #start-button { padding: 0.9rem 3.4rem; font-size: 1.8rem; }
+  #post-exit > *:not(.wz-keep) { display: none !important; }
+  #start-button, #reload-button { padding: 0.9rem 3.4rem; font-size: 1.8rem; }
+  .wz-launch-logo { display: block; margin: 0 auto 1.75rem; max-width: min(72vw, 560px); height: auto; }
 </style>
 <div class="w-100 vh-100" id="content_container">
 <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
@@ -391,6 +394,7 @@
   </main>
 
   <main class="px-3" style="display: none;" id="launch-game">
+    <p class="wz-keep"><img src="assets/wz_logo.png" class="wz-launch-logo" alt="Warzone 2100 Reforged"></p>
     <h1>Launch the Web Edition</h1>
     <p class="lead"><svg class="bi me-1"><use href="#bi-check-circle"></use></svg>Classic look, <svg class="bi me-1"><use href="#bi-check-circle"></use></svg>Medium-quality textures, <svg class="bi me-1"><use href="#bi-check-circle"></use></svg>Campaign &amp; skirmish</p>
     <p class="lead wz-keep">
@@ -435,8 +439,8 @@
   <main class="px-3" style="display: none;" id="post-exit">
     <h1>Thanks for playing!</h1>
     <p class="lead">If you'd like to play again, simply reload.</p>
-    <p class="lead">
-      <button type="button" class="btn btn-lg btn-outline-secondary fw-bold" id="reload-button" onclick="window.location.reload();"><svg class="bi me-1"><use href="#bi-arrow-clockwise"></use></svg>Reload</button>
+    <p class="lead wz-keep">
+      <button type="button" class="btn btn-lg btn-primary fw-bold" id="reload-button" onclick="window.location.reload();">Play again</button>
     </p>
     <p class="lead">Or help support by donating:</p>
     <a class="btn btn-sm btn-outline-secondary btn-block" title="Donate" href="https://donations.wz2100.net" target="_blank" rel="noopener"><svg class="bi me-1"><use href="#bi-heart"></use></svg>Donate</a>

@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+    Cordova root config for the Warzone 2100 iPad wrapper.
+    setup-ipad.sh copies this over the generated project config.xml before
+    `cordova platform add ios`, so the preferences and (crucially) the
+    allow-navigation entries for http://localhost propagate to the platform.
+-->
+<widget id="com.dedrisproject.wz2100" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>Warzone 2100</name>
+    <description>Warzone 2100 - Web Edition (iPad)</description>
+    <author email="dedrisproject@gmail.com" href="https://wz2100.net">
+        DedrisRemastered
+    </author>
+    <content src="index.html" />
+
+    <!-- The WebView loads http://localhost:8642 (embedded server) so the WASM
+         build is cross-origin isolated. These allow the WebView to navigate there. -->
+    <allow-navigation href="http://localhost:8642/*" />
+    <allow-navigation href="http://localhost/*" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+
+    <preference name="Orientation" value="landscape" />
+    <preference name="Fullscreen" value="true" />
+    <preference name="DisallowOverscroll" value="true" />
+    <preference name="BackupWebStorage" value="none" />
+
+    <platform name="ios">
+        <preference name="deployment-target" value="16.0" />
+        <preference name="scheme" value="app" />
+        <preference name="hostname" value="localhost" />
+        <preference name="WKWebViewOnly" value="true" />
+        <preference name="SwiftVersion" value="5.0" />
+    </platform>
+</widget>
