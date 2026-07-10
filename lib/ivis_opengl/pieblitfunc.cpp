@@ -101,15 +101,6 @@ void GFX::loadTexture(iV_Image&& bitmap, gfx_api::texture_type textureType, cons
 	mTexture = gfx_api::context::get().loadTextureFromUncompressedImage(std::move(bitmap), textureType, filename, maxWidth, maxHeight);
 }
 
-gfx_api::texture2dDimensions GFX::getTextureDimensions() const
-{
-	if (mTexture)
-	{
-		return mTexture->get_dimensions();
-	}
-	return gfx_api::texture2dDimensions();
-}
-
 void GFX::makeTexture(size_t width, size_t height, const gfx_api::pixel_format& format, const std::string& debugName)
 {
 	ASSERT(mType == GFX_TEXTURE, "Wrong GFX type");

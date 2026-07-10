@@ -295,20 +295,18 @@ void screen_SetBackDropFromFile(const char *filename)
 	int maxTextureSize = gfx_api::context::get().get_context_value(gfx_api::context::context_value::MAX_TEXTURE_SIZE);
 	backdropGfx->loadTexture(filename, gfx_api::texture_type::user_interface, maxTextureSize, maxTextureSize);
 	backdropIsMapPreview = false;
-	// DedrisRemastered: aggiorna le proporzioni con quelle reali dell'immagine
-	// caricata, così il backdrop viene mostrato intero e non deformato.
-	auto backdropDims = backdropGfx->getTextureDimensions();
-	if (backdropDims.width > 0 && backdropDims.height > 0)
-	{
-		backdropTexAspect = static_cast<float>(backdropDims.width) / static_cast<float>(backdropDims.height);
-	}
-	// DedrisRemastered: miniatura sfocata dietro le bande. Il backdrop è un .ktx2 (Basis)
-	// il cui loader compresso non produce una texture così piccola (a 64px fallisce),
-	// perciò lo decodifichiamo a piena risoluzione e lo riduciamo su CPU a ~64px:
-	// ingrandito poi a tutto schermo con filtro lineare fa da sfondo sfocato ("frosted").
+	// DedrisRemastered: decodifichiamo l'immagine a piena risoluzione (il backdrop è un
+	// .ktx2 Basis: la texture compressa non riporta dimensioni affidabili e il suo loader
+	// non produce texture minuscole). Dalle dimensioni REALI dell'immagine ricaviamo le
+	// proporzioni per l'adattamento "fit" (niente deformazione né 4:3 forzato), e una
+	// copia ridotta a ~64px fa da sfondo sfocato ("frosted") dietro le bande.
 	auto blurImg = gfx_api::loadUncompressedImageFromFile(filename, gfx_api::pixel_format_target::texture_2d, gfx_api::texture_type::user_interface, -1, -1, true);
 	if (blurImg)
 	{
+		if (blurImg->width() > 0 && blurImg->height() > 0)
+		{
+			backdropTexAspect = static_cast<float>(blurImg->width()) / static_cast<float>(blurImg->height());
+		}
 		blurImg->scale_image_max_size(64, 64);
 		backdropBlurGfx->loadTexture(std::move(*blurImg), gfx_api::texture_type::user_interface, "mem::backdrop_blur");
 	}

@@ -284,8 +284,11 @@ if(WZ_ENABLE_BASIS_UNIVERSAL AND NOT WZ_CI_DISABLE_BASIS_COMPRESS_TEXTURES)
 	if(CMAKE_SYSTEM_NAME MATCHES "Emscripten")
 		set(_bdrop_max_size 1024)
 	endif()
+	# DedrisRemastered: i backdrop sono 16:9. Codifichiamo la texture in 16:9 (RESIZE_HEIGHT)
+	# invece che quadrata, così non viene stirata (altrimenti a runtime appare deformata/4:3).
+	math(EXPR _bdrop_max_height "${_bdrop_max_size} * 9 / 16")
 
-	WZ_BASIS_ENCODE_TEXTURES(OUTPUT_DIR "${_output_dir}" TYPE "UITEXTURE" RESIZE "${_bdrop_max_size}" RDO ENCODING_TARGET texture_encoding TARGET_FOLDER data ALL FILES ${TEXPAGES_BACKDROPS})
+	WZ_BASIS_ENCODE_TEXTURES(OUTPUT_DIR "${_output_dir}" TYPE "UITEXTURE" RESIZE "${_bdrop_max_size}" RESIZE_HEIGHT "${_bdrop_max_height}" RDO ENCODING_TARGET texture_encoding TARGET_FOLDER data ALL FILES ${TEXPAGES_BACKDROPS})
 
 	# Excluding pre-generated decal mips
 	file(GLOB DECALS_128 LIST_DIRECTORIES false CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/base/texpages/tertilesc*hw-128/*.png")

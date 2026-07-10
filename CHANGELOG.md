@@ -27,6 +27,7 @@ Tutte le modifiche del progetto, dalla più recente. Le regole di aggiornamento 
 - `SPACE` non attiva più la camera di inseguimento: ora è scorciatoia secondaria per *Seleziona tutte le unità da combattimento*
 
 ### Build/Web
+- I backdrop del menu vengono codificati (Basis/KTX2) mantenendo il rapporto 16:9 invece di essere forzati a una texture quadrata: così non appaiono più deformati/stirati nel gioco
 - Versione iPad: wrapper Cordova con server HTTP locale (per i thread WASM in WKWebView), script di setup/deploy e icona app
 - Build web: schermata di avvio minimale con logo Reforged e tasti Play / Play again, pensata per il deploy su iPad
 - La build Emscripten funziona anche da directory con spazi nel percorso
