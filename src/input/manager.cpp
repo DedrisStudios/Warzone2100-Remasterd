@@ -80,6 +80,12 @@ bool InputManager::mappingsSortRequired() const
 
 void InputManager::resetMappings(bool bForceDefaults, const KeyFunctionConfiguration& keyFuncConfig)
 {
+#if defined(__EMSCRIPTEN__)
+	// Touch build: always apply the current keyconfig defaults and ignore any stale
+	// persisted keymap.json (which may lack newer bindings like QuickSave / camera rotate,
+	// so on-screen touch buttons that synthesize those keys would otherwise do nothing).
+	bForceDefaults = true;
+#endif
 	contextManager.resetStates();
 	keyMappings.clear();
 	markerKeyFunctions.clear();

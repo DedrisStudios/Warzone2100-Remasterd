@@ -464,6 +464,209 @@
   <div class="emscripten_container unselectable" id="emscripten_container" style="display:none;">
     <canvas class="emscripten unselectable" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
   </div>
+
+  <!-- iPad touch controls: on-screen buttons that synthesize keyboard events to
+       the game canvas (camera pan / rotate / zoom / quicksave / menu). Shown only
+       on touch devices (or with ?tc=1 for desktop testing). No wasm changes. -->
+  <style id="wz-touch-controls-style">
+    #wz-tc { position: fixed; inset: 0; z-index: 90000; pointer-events: none; display: none;
+             font-family: system-ui, -apple-system, sans-serif; -webkit-user-select: none; user-select: none; }
+    #wz-tc .wz-tc-btn { pointer-events: auto; width: 54px; height: 54px; border-radius: 12px;
+             background: rgba(18,20,26,0.5); border: 1px solid rgba(200,220,255,0.35); color: #e8eef6;
+             font-size: 22px; line-height: 1; display: flex; align-items: center; justify-content: center;
+             touch-action: none; -webkit-tap-highlight-color: transparent; backdrop-filter: blur(2px); }
+    #wz-tc .wz-tc-btn.active { background: rgba(40,110,230,0.8); border-color: rgba(120,180,255,0.95); }
+    #wz-tc .wz-tc-cluster { position: absolute; display: grid; gap: 8px; }
+    #wz-tc.wz-collapsed .wz-tc-cluster { display: none; }
+    .wz-tc-dpad  { left: 20px; top: 50%; transform: translateY(-50%); grid-template-columns: repeat(3, 54px); grid-template-rows: repeat(3, 54px); }
+    .wz-tc-right { right: 20px; top: 50%; transform: translateY(-50%); grid-auto-flow: row; }
+    .wz-tc-top   { right: 84px; top: 16px; grid-auto-flow: column; }
+    #wz-tc .wz-tc-toggle { position: absolute; right: 20px; bottom: 20px; opacity: 0.9; }
+    #wz-tc .wz-tc-grip { position: absolute; left: -7px; top: -7px; width: 26px; height: 26px;
+             border-radius: 50%; background: rgba(40,110,230,0.9); color: #fff; font-size: 13px;
+             line-height: 1; display: flex; align-items: center; justify-content: center;
+             pointer-events: auto; touch-action: none; cursor: move; }
+  </style>
+  <div id="wz-tc" aria-hidden="true"></div>
+  <script>
+  (function () {
+    var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || /[?&]tc=1/.test(location.search);
+    if (!isTouch) return;
+
+    var K = {
+      up:     {key:'ArrowUp',    code:'ArrowUp',        kc:38,  loc:0},
+      down:   {key:'ArrowDown',  code:'ArrowDown',      kc:40,  loc:0},
+      left:   {key:'ArrowLeft',  code:'ArrowLeft',      kc:37,  loc:0},
+      right:  {key:'ArrowRight', code:'ArrowRight',     kc:39,  loc:0},
+      rotL:   {key:'4',          code:'Numpad4',        kc:100, loc:3},
+      rotR:   {key:'6',          code:'Numpad6',        kc:102, loc:3},
+      zoomIn: {key:'+',          code:'NumpadAdd',      kc:107, loc:3},
+      zoomOut:{key:'-',          code:'NumpadSubtract', kc:109, loc:3},
+      save:   {key:'F10',        code:'F10',            kc:121, loc:0},
+      menu:   {key:'Escape',     code:'Escape',         kc:27,  loc:0},
+      selCombat: {combo:true, mod:{key:'Control', code:'ControlLeft', kc:17, loc:1}, main:{key:'a', code:'KeyA', kc:65, loc:0}}
+    };
+    var held = new Set();
+    function fire(type, spec) {
+      var ev = new KeyboardEvent(type, {key: spec.key, code: spec.code, location: spec.loc,
+                                        bubbles: true, cancelable: true, composed: true});
+      try { Object.defineProperty(ev, 'keyCode', {get: function(){return spec.kc;}});
+            Object.defineProperty(ev, 'which',   {get: function(){return spec.kc;}}); } catch (e) {}
+      (document.getElementById('canvas') || document.body).dispatchEvent(ev);
+    }
+    function press(s)   { fire('keydown', s); held.add(s); }
+    function release(s) { fire('keyup', s); held.delete(s); }
+    function releaseAll(){ held.forEach(function(s){ fire('keyup', s); }); held.clear(); }
+    window.addEventListener('blur', releaseAll);
+    document.addEventListener('visibilitychange', function(){ if (document.hidden) releaseAll(); });
+
+    // mode 'hold' = continuous action while pressed (pan / rotate / zoom): keeps the
+    // key down AND re-fires keydown (auto-repeat) so per-frame handlers like camera
+    // rotate keep going. mode 'tap' = one-shot (save / menu / select-all).
+    function mkBtn(label, spec, mode) {
+      var b = document.createElement('div');
+      b.className = 'wz-tc-btn'; b.textContent = label; b.setAttribute('role', 'button');
+      var timer = null;
+      function startPress() {
+        b.classList.add('active');
+        if (mode === 'combo') { // modifier + key, e.g. Ctrl+A
+          fire('keydown', spec.mod); fire('keydown', spec.main);
+          fire('keyup', spec.main); fire('keyup', spec.mod);
+          return;
+        }
+        press(spec);
+        if (mode === 'hold') { timer = setInterval(function () { fire('keydown', spec); }, 80); }
+      }
+      function endPress() {
+        b.classList.remove('active');
+        if (mode === 'combo') return;
+        if (timer) { clearInterval(timer); timer = null; }
+        release(spec);
+      }
+      b.addEventListener('pointerdown', function (e) {
+        e.preventDefault(); e.stopPropagation();
+        try { b.setPointerCapture(e.pointerId); } catch (x) {}
+        startPress();
+      });
+      var up = function (e) { if (e) { e.preventDefault(); e.stopPropagation(); } endPress(); };
+      b.addEventListener('pointerup', up);
+      b.addEventListener('pointercancel', up);
+      b.addEventListener('lostpointercapture', function(){ endPress(); });
+      // Swallow raw touch events so they don't reach the game canvas as spurious input
+      ['touchstart','touchmove','touchend','touchcancel'].forEach(function (t) {
+        b.addEventListener(t, function (e) { e.preventDefault(); e.stopPropagation(); }, {passive:false});
+      });
+      b.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+      return b;
+    }
+
+    var tc = document.getElementById('wz-tc');
+
+    var dpad = document.createElement('div');
+    dpad.className = 'wz-tc-cluster wz-tc-dpad';
+    var up = mkBtn('▲', K.up, 'hold'),   dn = mkBtn('▼', K.down, 'hold'),
+        lf = mkBtn('◀', K.left, 'hold'), rt = mkBtn('▶', K.right, 'hold');
+    up.style.gridArea = '1 / 2'; lf.style.gridArea = '2 / 1';
+    rt.style.gridArea = '2 / 3'; dn.style.gridArea = '3 / 2';
+    dpad.append(up, lf, rt, dn);
+
+    var right = document.createElement('div');
+    right.className = 'wz-tc-cluster wz-tc-right';
+    right.append(mkBtn('↺', K.rotL, 'hold'), mkBtn('↻', K.rotR, 'hold'),
+                 mkBtn('+', K.zoomIn, 'hold'), mkBtn('−', K.zoomOut, 'hold'));
+
+    var top = document.createElement('div');
+    top.className = 'wz-tc-cluster wz-tc-top';
+    top.append(mkBtn('⚔', K.selCombat, 'combo'), mkBtn('💾', K.save, 'tap'), mkBtn('☰', K.menu, 'tap'));
+
+    var toggle = document.createElement('div');
+    toggle.className = 'wz-tc-btn wz-tc-toggle'; toggle.textContent = '🎮';
+    toggle.title = 'Tocca: mostra/nascondi comandi · Trascina: sposta';
+    (function () {
+      try { var s = JSON.parse(localStorage.getItem('wz-tc-pos-toggle') || 'null');
+            if (s) { toggle.style.left = s.left + 'px'; toggle.style.top = s.top + 'px';
+                     toggle.style.right = 'auto'; toggle.style.bottom = 'auto'; } } catch (e) {}
+      var st = null, moved = false;
+      toggle.addEventListener('pointerdown', function (e) {
+        e.preventDefault(); e.stopPropagation();
+        var r = toggle.getBoundingClientRect();
+        toggle.style.left = r.left + 'px'; toggle.style.top = r.top + 'px';
+        toggle.style.right = 'auto'; toggle.style.bottom = 'auto';
+        st = {x: e.clientX, y: e.clientY, l: r.left, t: r.top}; moved = false;
+        try { toggle.setPointerCapture(e.pointerId); } catch (x) {}
+      });
+      toggle.addEventListener('pointermove', function (e) {
+        if (!st) return; e.preventDefault();
+        if (Math.abs(e.clientX - st.x) + Math.abs(e.clientY - st.y) > 6) moved = true;
+        if (moved) {
+          var nl = Math.max(0, Math.min(window.innerWidth  - toggle.offsetWidth,  st.l + e.clientX - st.x));
+          var nt = Math.max(0, Math.min(window.innerHeight - toggle.offsetHeight, st.t + e.clientY - st.y));
+          toggle.style.left = nl + 'px'; toggle.style.top = nt + 'px';
+        }
+      });
+      var end = function () {
+        if (!st) return;
+        if (moved) { try { localStorage.setItem('wz-tc-pos-toggle', JSON.stringify({left: parseFloat(toggle.style.left), top: parseFloat(toggle.style.top)})); } catch (x) {} }
+        else { tc.classList.toggle('wz-collapsed'); }
+        st = null;
+      };
+      toggle.addEventListener('pointerup', end);
+      toggle.addEventListener('pointercancel', end);
+      ['touchstart','touchmove','touchend'].forEach(function (t) {
+        toggle.addEventListener(t, function (e) { e.preventDefault(); e.stopPropagation(); }, {passive:false});
+      });
+    })();
+
+    tc.append(dpad, right, top, toggle);
+
+    // Each cluster gets a drag handle so the player can move it to free HUD space.
+    // Positions persist in localStorage.
+    function makeDraggable(el, key) {
+      var grip = document.createElement('div');
+      grip.className = 'wz-tc-grip'; grip.textContent = '⠿'; grip.title = 'Trascina per spostare';
+      el.appendChild(grip);
+      try { var s = JSON.parse(localStorage.getItem(key) || 'null');
+            if (s) { el.style.left = s.left + 'px'; el.style.top = s.top + 'px';
+                     el.style.right = 'auto'; el.style.bottom = 'auto'; el.style.transform = 'none'; } } catch (e) {}
+      var st = null;
+      grip.addEventListener('pointerdown', function (e) {
+        e.preventDefault(); e.stopPropagation();
+        var r = el.getBoundingClientRect();
+        el.style.left = r.left + 'px'; el.style.top = r.top + 'px';
+        el.style.right = 'auto'; el.style.bottom = 'auto'; el.style.transform = 'none';
+        st = {x: e.clientX, y: e.clientY, l: r.left, t: r.top};
+        try { grip.setPointerCapture(e.pointerId); } catch (x) {}
+      });
+      grip.addEventListener('pointermove', function (e) {
+        if (!st) return; e.preventDefault();
+        var nl = Math.max(0, Math.min(window.innerWidth  - el.offsetWidth,  st.l + e.clientX - st.x));
+        var nt = Math.max(0, Math.min(window.innerHeight - el.offsetHeight, st.t + e.clientY - st.y));
+        el.style.left = nl + 'px'; el.style.top = nt + 'px';
+      });
+      var endDrag = function () { if (!st) return; st = null;
+        try { localStorage.setItem(key, JSON.stringify({left: parseFloat(el.style.left), top: parseFloat(el.style.top)})); } catch (x) {} };
+      grip.addEventListener('pointerup', endDrag);
+      grip.addEventListener('pointercancel', endDrag);
+      ['touchstart','touchmove','touchend'].forEach(function (t) {
+        grip.addEventListener(t, function (e) { e.preventDefault(); e.stopPropagation(); }, {passive:false});
+      });
+    }
+    makeDraggable(dpad,  'wz-tc-pos-dpad');
+    makeDraggable(right, 'wz-tc-pos-right');
+    makeDraggable(top,   'wz-tc-pos-top');
+
+    function refresh() {
+      var cont = document.getElementById('emscripten_container');
+      tc.style.display = (cont && getComputedStyle(cont).display !== 'none') ? 'block' : 'none';
+    }
+    var cont = document.getElementById('emscripten_container');
+    if (cont && window.MutationObserver) {
+      new MutationObserver(refresh).observe(cont, {attributes: true, attributeFilter: ['style','class']});
+    }
+    setInterval(refresh, 1000);
+    refresh();
+  })();
+  </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js" integrity="sha512-X/YkDZyjTf4wyc2Vy16YGCPHwAY8rZJY+POgokZjQB2mhIRFJCckEGc6YyX9eNsPfn0PzThEuNs+uaomE5CO6A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <div class="small-screen-blocker px-3">
       <main class="py-3">

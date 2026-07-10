@@ -1261,8 +1261,8 @@ void mainLoop()
 
 	pie_ScreenFrameRenderBegin();
 
-	// Screenshot key is now available globally
-	if (keyPressed(KEY_F10))
+	// Screenshot key is now available globally (F7; F10 is QuickSave in the keymap)
+	if (keyPressed(KEY_F7))
 	{
 		kf_ScreenDump();
 		inputLoseFocus();		// remove it from input stream

@@ -20,11 +20,14 @@ Tutte le modifiche del progetto, dalla più recente. Le regole di aggiornamento 
 ### Controlli
 - Rotazione camera su `Q`/`E`; *Rispondi al fuoco* spostato su `V` e *Pattuglia* su `X`
 - Salvataggio rapido spostato su `F10`, screenshot su `F7`
+- `SPACE` non attiva più la camera di inseguimento: ora è scorciatoia secondaria per *Seleziona tutte le unità da combattimento*
 
 ### Build/Web
 - Versione iPad: wrapper Cordova con server HTTP locale (per i thread WASM in WKWebView), script di setup/deploy e icona app
 - Build web: schermata di avvio minimale con logo Reforged e tasti Play / Play again, pensata per il deploy su iPad
 - La build Emscripten funziona anche da directory con spazi nel percorso
+- iPad/touch: un solo tocco (tap) impartisce direttamente gli ordini di movimento/attacco (ordini col tasto destro disattivati nella build touch)
+- iPad/touch: la build applica sempre i tasti di default aggiornati, ignorando eventuali keymap.json obsoleti (i pulsanti touch a schermo funzionano sempre)
 
 ### Documentazione
 - Aggiunto Bartolo Illiano (Software Engineer, project Reforge) alla sezione DedrisStudios del file AUTHORS

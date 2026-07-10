@@ -440,7 +440,13 @@ bool loadConfig()
 	setDrawShadows(iniGetBool("shadows", true).value());
 	war_setSoundEnabled(iniGetBool("sound", true).value());
 	setInvertMouseStatus(iniGetBool("mouseflip", true).value());
+#if defined(__EMSCRIPTEN__)
+	// Touch-first build: force left-click orders off the right button, so a single
+	// finger tap (left-click) issues move/attack orders directly (and still selects).
+	setRightClickOrders(false);
+#else
 	setRightClickOrders(iniGetBool("RightClickOrders", true).value());
+#endif
 	setPanMouseKey(iniGetMouseKeyCode("mouseKeyPan", getPanMouseKey()));
 	if (!createdConfigFile && configVersion < 3)
 	{
