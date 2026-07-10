@@ -440,7 +440,7 @@ bool loadConfig()
 	setDrawShadows(iniGetBool("shadows", true).value());
 	war_setSoundEnabled(iniGetBool("sound", true).value());
 	setInvertMouseStatus(iniGetBool("mouseflip", true).value());
-	setRightClickOrders(iniGetBool("RightClickOrders", false).value());
+	setRightClickOrders(iniGetBool("RightClickOrders", true).value());
 	setPanMouseKey(iniGetMouseKeyCode("mouseKeyPan", getPanMouseKey()));
 	if (!createdConfigFile && configVersion < 3)
 	{

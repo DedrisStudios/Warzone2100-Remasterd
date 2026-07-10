@@ -1883,6 +1883,7 @@ static void dealWithLMBDroid(DROID *psDroid, SELECTION_TYPE selection)
 	else if (ownDroid)
 	{
 		printDroidClickInfo(psDroid);
+		intObjectSelected((BASE_OBJECT *)psDroid); // auto-open the unit orders menu on selection
 	}
 	else // Clicked on allied unit with no other possible actions
 	{

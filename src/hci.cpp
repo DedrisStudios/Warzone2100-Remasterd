@@ -1411,6 +1411,25 @@ INT_RETVAL intRunWidgets()
 		quitting = true;
 	}
 
+	// Auto-open the unit orders menu (bottom-left) when a fresh selection is made
+	// (from no selection to some), unless another interface screen is already open.
+	{
+		static bool hadDroidSelected = false;
+		DROID *psFirstSelected = nullptr;
+		if (selectedPlayer < MAX_PLAYERS)
+		{
+			for (DROID *psDroid : gameWorld.objects.droids[selectedPlayer])
+			{
+				if (psDroid->selected) { psFirstSelected = psDroid; break; }
+			}
+		}
+		if (psFirstSelected != nullptr && !hadDroidSelected && intMode == INT_NORMAL)
+		{
+			intObjectSelected((BASE_OBJECT *)psFirstSelected);
+		}
+		hadDroidSelected = (psFirstSelected != nullptr);
+	}
+
 	if (bLoadSaveUp && runLoadSave(true) && strlen(sRequestResult) > 0)
 	{
 		if (bRequestLoad)
