@@ -795,6 +795,19 @@ static void DrawRadarExtras(const glm::mat4 &modelViewProjectionMatrix)
 {
 	pie_DrawViewingWindow(modelViewProjectionMatrix);
 	RenderWindowFrame(FRAME_RADAR, -1, -1, radarWidth + 2, radarHeight + 2, modelViewProjectionMatrix);
+
+	// DedrisRemastered (OVERWATCH-C2): fixed screen-space corner L-brackets framing the
+	// minimap as a tactical instrument. Drawn in screen space (default projection) so
+	// they stay put while the minimap rotates inside, matching the HUD panel brackets.
+	const int hw = static_cast<int>(MAX(radarWidth, radarHeight)) / 2 + 3;
+	const int rx0 = radarCenterX - hw, ry0 = radarCenterY - hw;
+	const int rx1 = radarCenterX + hw, ry1 = radarCenterY + hw;
+	const PIELIGHT rail = pal_RGBA(51, 255, 158, 255);
+	const int bl = 11;
+	iV_Line(rx0, ry0, rx0 + bl, ry0, rail); iV_Line(rx0, ry0, rx0, ry0 + bl, rail);      // top-left
+	iV_Line(rx1 - bl, ry0, rx1, ry0, rail); iV_Line(rx1, ry0, rx1, ry0 + bl, rail);      // top-right
+	iV_Line(rx0, ry1 - bl, rx0, ry1, rail); iV_Line(rx0, ry1, rx0 + bl, ry1, rail);      // bottom-left
+	iV_Line(rx1 - bl, ry1, rx1, ry1, rail); iV_Line(rx1, ry1 - bl, rx1, ry1, rail);      // bottom-right
 }
 
 /** Does a screen coordinate lie within the radar area? */

@@ -11,6 +11,8 @@ Tutte le modifiche del progetto, dalla più recente. Le regole di aggiornamento 
 - HUD: reticolo comandi ridisegnato — esagoni scuri tattici con icone comando **ridisegnate da zero** in stile moderno (martello=costruzione, fabbrica=produzione, atomo=ricerca, matita=progettazione, globo=intel, stella=comandanti, X=annulla), rail verde sui pulsanti attivi/premuti e anello verde al passaggio del mouse (disposizione a nido d'ape invariata)
 - HUD: barra superiore (pulsante opzioni «gear», timer di missione e di rinforzi) ricolorata in stile scuro + verde coerente col resto dell'HUD (era blu-viola)
 - HUD: contatori a schermo (unità perse/costruite/uccise, FPS) resi in stile «telemetria» — maiuscoletto verde tenue invece del bianco
+- HUD: il radar (minimap) è incorniciato da staffe angolari a mirino verdi fisse, coerenti col motivo dei pannelli, per un aspetto da strumento tattico
+- HUD: tab piccole e frecce di scorrimento dei pannelli ricolorate in verde (erano viola)
 - Grafica di gioco: color-grade cinematografica leggera del campo di battaglia (tonemap filmico + vignettatura tenue) applicata alla copia scena→schermo su entrambi i backend (OpenGL e Vulkan), per un aspetto più moderno; la HUD resta nitida
 - Tutti i 23 cursori di gioco rimasterizzati in alta definizione (32px nativi, hotspot allineati agli originali)
 - Sfondi dei menu (backdrop) e schermata crediti rimasterizzati in HD *(locale, non nel repo — asset del submodule texpages)*
