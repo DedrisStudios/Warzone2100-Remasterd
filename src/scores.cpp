@@ -138,7 +138,10 @@ static PIELIGHT getColour(int id)
 	case STR_MR_UNITS_NOW    :
 	case STR_MR_STR_BUILT    :
 	case STR_MR_STR_NOW      :
-		return WZCOL_MENU_SCORE_BUILT;
+		// DedrisRemastered: blu esplicito per la schermata punteggi. WZCOL_MENU_SCORE_BUILT
+		// e' stato virato in verde (accento di selezione dei menu), ma qui serve un colore
+		// distinto dal verde "distrutte" per non confondere le statistiche.
+		return pal_RGBA(0x27, 0x31, 0xb9, 0xff);
 	case STR_MR_LEVEL_ROOKIE :
 	case STR_MR_LEVEL_GREEN  :
 	case STR_MR_LEVEL_TRAINED:

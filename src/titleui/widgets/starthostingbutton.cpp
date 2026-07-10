@@ -326,7 +326,7 @@ void WzStartHostingButton::display(int xOffset, int yOffset)
 
 	// Display the button.
 	auto border_color = (isHighlight) ? WZCOL_TEXT_BRIGHT : WZCOL_TEXT_MEDIUM;
-	auto background_color = isDown || isDisabled ? pal_RGBA(10, 0, 70, 250) : WZCOL_MENU_BACKGROUND;
+	auto background_color = isDown || isDisabled ? pal_RGBA(6, 46, 24, 250) : WZCOL_MENU_BACKGROUND; // verde reskin (era blu 10,0,70)
 	if (isDisabled)
 	{
 		border_color = WZCOL_TEXT_DARK;

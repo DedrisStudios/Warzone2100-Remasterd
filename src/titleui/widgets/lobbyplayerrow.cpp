@@ -128,7 +128,7 @@ void ReadyBoxContainerWidget::display(int xOffset, int yOffset)
 	{
 		const int scale = 2500;
 		int f = realTime % scale;
-		PIELIGHT mix = pal_RGBA(3, 15, 252, 255);
+		PIELIGHT mix = pal_RGBA(16, 150, 72, 255); // verde reskin (era blu 3,15,252)
 		mix.byte.a = 155 + iSinR(65536 * f / scale, 75);
 
 		pie_UniTransBoxFill(x0 + 2, y0 + 1, x0 + w - 1, y0 + h - 1, mix);

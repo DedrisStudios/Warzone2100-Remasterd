@@ -779,7 +779,7 @@ static void displayWrappedOptionSectionItem(WIDGET *psWidget, UDWORD xOffset, UD
 	int y0 = yOffset + psWidget->y();
 	int w = psWidget->width();
 	int h = psWidget->height();
-	pie_UniTransBoxFill(x0, y0, x0 + w, y0 + h, pal_RGBA(14,12,55,255));
+	pie_UniTransBoxFill(x0, y0, x0 + w, y0 + h, pal_RGBA(10,42,24,255)); // verde reskin (era blu 14,12,55)
 }
 
 static void displayInlineEditBox(WIDGET *psWidget, UDWORD xOffset, UDWORD yOffset)

@@ -1554,8 +1554,8 @@ void LobbyBrowser::populateTableFromGameList(bool force)
 		{
 			const bool blindSimpleLobby = isBlindSimpleLobby(blindModeFromLobbyGameDetails(gameInfo.blindMode).value_or(BLIND_MODE::NONE));
 			row->setHighlightsOnMouseOver(true);
-			row->setHighlightColor(pal_RGBA(5,29,245,200));
-			row->setBackgroundColor(blindSimpleLobby ? pal_RGBA(0,20,130,50) : pal_RGBA(0,0,0,50));
+			row->setHighlightColor(pal_RGBA(18,150,72,200)); // verde reskin (era blu 5,29,245)
+			row->setBackgroundColor(blindSimpleLobby ? pal_RGBA(0,60,26,50) : pal_RGBA(0,0,0,50)); // verde reskin (era blu 0,20,130)
 		}
 		else
 		{

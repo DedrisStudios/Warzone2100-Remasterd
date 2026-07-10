@@ -44,7 +44,9 @@ static void displayScrollBar(WIDGET *widget, UDWORD xOffset, UDWORD yOffset)
 		--sliderDrawY0;
 		++sliderDrawY1;
 	}
-	pie_UniTransBoxFill(x0+2, sliderDrawY0, x0 + slider->width()-2, sliderDrawY1, slider->isEnabled() ? WZCOL_LBLUE : WZCOL_FORM_DISABLE);
+	// DedrisRemastered: pollice della scrollbar in verde (reskin) invece dell'azzurro
+	// WZCOL_LBLUE, che resta invariato dov'e' semantico (barre scudo unita' in gioco).
+	pie_UniTransBoxFill(x0+2, sliderDrawY0, x0 + slider->width()-2, sliderDrawY1, slider->isEnabled() ? pal_RGBA(60, 200, 110, 255) : WZCOL_FORM_DISABLE);
 }
 
 void ScrollBarWidget::initialize()

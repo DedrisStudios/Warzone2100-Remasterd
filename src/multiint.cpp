@@ -321,7 +321,7 @@ public:
 
 		// Display the button.
 		auto border_color = !isDisabled ? pal_RGBA(255, 255, 255, 120) : WZCOL_FORM_DARK;
-		auto fill_color = isDown || isDisabled ? pal_RGBA(10, 0, 70, 250) : pal_RGBA(25, 0, 110, 220);
+		auto fill_color = isDown || isDisabled ? pal_RGBA(6, 46, 24, 250) : pal_RGBA(14, 70, 34, 220); // verde reskin (era blu 10,0,70 / 25,0,110)
 		iV_ShadowBox(x0, y0, x1, y1, 0, border_color, border_color, fill_color);
 		if (isHighlight)
 		{
@@ -4467,7 +4467,7 @@ void ChatBoxWidget::display(int xOffset, int yOffset)
 	int messageEditAreaY0 = y0 + messages->y() + messages->height();
 	int messageEditAreaX0 = x0;
 
-	pie_UniTransBoxFill(messageEditAreaX0 + 1, messageEditAreaY0, messageEditAreaX0 + width() - 1, y0 + height() - 1, pal_RGBA(0,0,100,80));
+	pie_UniTransBoxFill(messageEditAreaX0 + 1, messageEditAreaY0, messageEditAreaX0 + width() - 1, y0 + height() - 1, pal_RGBA(0,50,20,80)); // verde reskin (era blu 0,0,100)
 
 	iV_Line(messageEditAreaX0 + 1, messageEditAreaY0, messageEditAreaX0 + width() - 1, messageEditAreaY0, WZCOL_FORM_DARK);
 }

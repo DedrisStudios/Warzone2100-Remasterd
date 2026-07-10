@@ -670,11 +670,11 @@ void PopoverMenuButtonDisplayFunc(WIDGET *psWidget, UDWORD xOffset, UDWORD yOffs
 	PIELIGHT backgroundColor;
 	if (isDown)
 	{
-		backgroundColor = pal_RGBA(10, 0, 70, 250); //WZCOL_FORM_DARK;
+		backgroundColor = pal_RGBA(6, 46, 24, 250); // verde reskin (era viola 10,0,70)
 	}
 	else if (isHighlight)
 	{
-		backgroundColor = pal_RGBA(25, 0, 110, 220); //WZCOL_TEXT_MEDIUM;
+		backgroundColor = pal_RGBA(14, 70, 34, 220); // verde reskin (era viola 25,0,110)
 	}
 	if (!backgroundColor.isTransparent())
 	{

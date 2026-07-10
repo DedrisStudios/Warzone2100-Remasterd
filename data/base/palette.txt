@@ -9,14 +9,14 @@ ff,0,0,ff	// health low
 ff,0,0,ff	// red
 ff,ff,0,ff	// yellow
 06,1a,0e,ff	// menu background
-0,15,f0,ff	// menu border
+18,b0,56,ff	// menu border (verde reskin, era blu 0,15,f0)
 85,1,1,ff	// menu load border
 ff,ff,ff,ff	// cursor
 1,1,21,ff	// menu scores interior
-64,64,a0,ff	// menu separator
+4a,7a,58,ff	// menu separator (verde reskin, era lavanda 64,64,a0)
 ff,ff,ff,ff	// text bright
-a0,a0,ff,ff	// text medium
-60,60,ff,ff	// text dark
+9c,c8,a8,ff	// text medium (verde reskin, era lavanda a0,a0,ff)
+5e,94,70,ff	// text dark (verde reskin, era blu 60,60,ff)
 1,1,1,ff	// score box border
 0,0,58,80	// score box
 cf,cf,cf,ff	// tooltip text
@@ -29,7 +29,7 @@ ff,0,0,ff	// map outline bad
 55,55,55,ff	// keymap fixed
 ff,23,0,ff	// menu score loss
 37,ef,6f,ff	// menu score destroyed
-27,31,b9,ff	// menu score built
+16,74,36,ff	// menu score built (verde reskin: accento selezione/evidenziazione menu; il blu semantico dei punteggi e' in scores.cpp)
 eb,eb,13,ff	// menu score rank
 91,0,c3,ff	// frame border normal
 c8,c8,c8,ff	// console text system

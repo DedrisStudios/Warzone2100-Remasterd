@@ -22,8 +22,8 @@
 
 constexpr int QCFORM_PANEL_TABS_PADDING = 20;
 constexpr int QCFORM_PANEL_TABS_HEIGHT = 20;
-const PIELIGHT WZCOL_PANELTABS_FILL_COLOR = pal_RGBA(25, 0, 110, 220);
-const PIELIGHT WZCOL_PANELTABS_FILL_COLOR_DARK = pal_RGBA(10, 0, 70, 250);
+const PIELIGHT WZCOL_PANELTABS_FILL_COLOR = pal_RGBA(14, 70, 34, 220); // verde reskin (era viola 25,0,110)
+const PIELIGHT WZCOL_PANELTABS_FILL_COLOR_DARK = pal_RGBA(6, 46, 24, 250); // verde reskin (era viola 10,0,70)
 const PIELIGHT WZCOL_PANELTABS_BORDER_LIGHT = pal_RGBA(255, 255, 255, 150);
 
 std::shared_ptr<WzPanelTabButton> WzPanelTabButton::make(const WzString& text)

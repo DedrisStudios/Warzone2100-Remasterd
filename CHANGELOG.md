@@ -13,6 +13,7 @@ Tutte le modifiche del progetto, dalla più recente. Le regole di aggiornamento 
 - Interfaccia di gioco (HUD) rimasterizzata in stile «vetro» verde (accento fazione Project): reticolo comandi (con stati normale/attivo/disabilitato/hover coerenti), barra energia, cornici finestra, schede, pulsante chiudi e slot dei menu costruzione/fabbrica/ricerca — icone originali ridisegnate mantenendone il significato
 - Pannello ordini unità (attacca/mantieni/pattuglia/ritira…) e schermata di progettazione ricolorati nella stessa tonalità verde, preservando le icone originali e i colori semantici delle barre di confronto statistiche (blu/rosso/giallo)
 - Menu di lancio (schermata iniziale e sottomenu) rimasterizzato nello stesso stile «vetro» verde dell'HUD: pannello dei pulsanti con riempimento scuro verdastro e bordo verde luminoso, voci di menu in verde (verde medio a riposo, più acceso al passaggio del mouse, verde-grigio spento quando non disponibili) al posto del vecchio lavanda, e banner laterale del titolo in verde
+- Reskin verde esteso a tutte le schermate dei menu: Opzioni (tab selezionata, intestazioni di sezione, sotto-schede, frecce dei menu a tendina, slider, barra di scorrimento e freccia «indietro»), selettore delle campagne, lobby multigiocatore (pannello opzioni, chat, pulsanti) — eliminati blu e viola residui dell'interfaccia. La schermata dei punteggi mantiene il blu «costruite» per distinguerlo dal verde «distrutte»; i colori di squadra dei giocatori restano invariati
 - Nuovo logo del menu principale
 
 ### Gameplay/UX
