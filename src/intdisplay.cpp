@@ -227,56 +227,55 @@ void PowerBar::display(int xOffset, int yOffset)
 
 	pie_SetFogStatus(false);
 
-	int top_x0 = x0;
-	int top_y0 = y0;
-
 	iX = x0 + 3;
 	iY = y0 + 10;
 
-	x0 += iV_GetImageWidth(IntImages, IMAGE_PBAR_TOP);
+	// DedrisRemastered (OVERWATCH-C2 HUD): the power gauge is the HUD's hero instrument,
+	// drawn procedurally as a modern tactical bar — a dark near-black track, a cyan-green
+	// gradient power fill with a bright pulsing leading-edge head, an amber "queued" /
+	// red "deficit" marker, and 25% scale ticks. Replaces the old sprite-based bar.
+	(void)Empty; // width-clamp side-output; track background now covers the empty region
+	const int bx1 = x0 + this->width();
+	const int by1 = y0 + this->height();
+	const int tby0 = y0 + 1;
+	const int tby1 = by1 - 1;
 
-	BatchedImageDrawRequests imageDrawBatch(true); // defer drawing
+	pie_UniTransBoxFill(x0, y0, bx1, by1, pal_RGBA(12, 15, 14, 235));   // dark track slab
+	iV_Box(x0, y0, bx1 - 1, by1 - 1, pal_RGBA(30, 38, 35, 255));       // subtle border
 
-	//fill in the empty section behind text
-	if (textWidth > 0)
+	const int fillLeft = x0 + 2 + textWidth; // fill begins after the left numeric readout
+	int fx = fillLeft;
+
+	if (ManPow > 0) // manufacturing-required / deficit marker
 	{
-		iV_DrawImageRepeatX(IntImages, IMAGE_PBAR_EMPTY, x0 - 1, y0, textWidth + 1, defaultProjectionMatrix(), true, &imageDrawBatch); // Overdraw by 1 to reduce seam with left-beginning-piece when scaling
-		x0 += textWidth;
+		const PIELIGHT reqCol = (ManPow > Avail) ? pal_RGBA(255, 68, 54, 255) : pal_RGBA(255, 176, 32, 255);
+		pie_UniTransBoxFill(fx, tby0, fx + ManPow, tby1, reqCol);
+		fx += ManPow;
 	}
 
-	//draw the left-most beginning tip
-	//to reduce a visible seam when scaling, this must come *after* the empty / text section above
-	iV_DrawImage(IntImages, IMAGE_PBAR_TOP, top_x0, top_y0, defaultProjectionMatrix(), &imageDrawBatch);
-
-	//draw required section
-	if (ManPow > Avail)
+	const int availEnd = fillLeft + Avail; // available power (cyan-green gradient)
+	if (availEnd > fx)
 	{
-		//draw the required in red
-		iV_DrawImageRepeatX(IntImages, IMAGE_PBAR_USED, x0, y0, ManPow, defaultProjectionMatrix(), true, &imageDrawBatch);
-	}
-	else
-	{
-		iV_DrawImageRepeatX(IntImages, IMAGE_PBAR_REQUIRED, x0, y0, ManPow, defaultProjectionMatrix(), true, &imageDrawBatch);
-	}
-	x0 += ManPow;
-
-	//draw the available section if any!
-	if (Avail - ManPow > 0)
-	{
-		iV_DrawImageRepeatX(IntImages, IMAGE_PBAR_AVAIL, x0, y0, Avail - ManPow, defaultProjectionMatrix(), true, &imageDrawBatch);
-		x0 += Avail - ManPow;
+		const int bands = 24;
+		const int span = availEnd - fx;
+		for (int b = 0; b < bands; ++b)
+		{
+			const int sx = fx + span * b / bands;
+			const int ex = fx + span * (b + 1) / bands;
+			if (ex <= sx) { continue; }
+			const double t = std::min(1.0, (double)(sx - fillLeft) / (double)std::max(1, BarWidth));
+			pie_UniTransBoxFill(sx, tby0, ex, tby1,
+			                    pal_RGBA((int)(14 + 33 * t), (int)(61 + 163 * t), (int)(42 + 158 * t), 255));
+		}
+		const int pulse = std::min(255, 205 + (int)(50 * sin(realTime / 140.0))); // pulsing head crest
+		pie_UniTransBoxFill(availEnd - 2, tby0, availEnd + 1, tby1, pal_RGBA(124, 255, 232, pulse));
 	}
 
-	//fill in the rest with empty section
-	if (Empty > 0)
+	for (int k = 1; k < 4; ++k) // 25% scale ticks
 	{
-		iV_DrawImageRepeatX(IntImages, IMAGE_PBAR_EMPTY, x0, y0, Empty + 1, defaultProjectionMatrix(), true, &imageDrawBatch); // Overdraw by 1 to reduce seam with right-end-piece when scaling
-		x0 += Empty;
+		const int tx = fillLeft + BarWidth * k / 4;
+		pie_UniTransBoxFill(tx, tby0, tx + 1, tby1, pal_RGBA(0, 0, 0, 90));
 	}
-
-	iV_DrawImage(IntImages, IMAGE_PBAR_BOTTOM, x0, y0, defaultProjectionMatrix(), &imageDrawBatch);
-
-	imageDrawBatch.draw(true);
 
 	auto unusedDerricks = countPlayerUnusedDerricks(gameWorld.objects);
 

@@ -6,6 +6,7 @@ Tutte le modifiche del progetto, dalla più recente. Le regole di aggiornamento 
 
 ### Grafica
 - Redesign dell'interfaccia di gioco (HUD) in stile tattico «lit slab» 2026: i pannelli hanno corpo scuro quasi-nero con un rail verde luminoso sul bordo inferiore e staffe angolari a mirino
+- HUD: barra dell'energia ridisegnata come strumento tattico — traccia scura, riempimento a gradiente verde→ciano con testa luminosa pulsante e tacche di scala al 25%
 - Tutti i 23 cursori di gioco rimasterizzati in alta definizione (32px nativi, hotspot allineati agli originali)
 - Sfondi dei menu (backdrop) e schermata crediti rimasterizzati in HD *(locale, non nel repo — asset del submodule texpages)*
 - Lo sfondo del menu non appare più schiacciato/deformato: viene disegnato nelle proporzioni corrette 16:9 (prima era mostrato stirato in un rapporto 4:3) e riempie tutta la finestra senza bande nere
