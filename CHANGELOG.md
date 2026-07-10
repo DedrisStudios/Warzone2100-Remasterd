@@ -12,6 +12,7 @@ Tutte le modifiche del progetto, dalla più recente. Le regole di aggiornamento 
 - Overlay scuro semitrasparente dietro i pulsanti del menu principale, per migliorare la leggibilità dei testi sopra lo sfondo
 - Interfaccia di gioco (HUD) rimasterizzata in stile «vetro» verde (accento fazione Project): reticolo comandi (con stati normale/attivo/disabilitato/hover coerenti), barra energia, cornici finestra, schede, pulsante chiudi e slot dei menu costruzione/fabbrica/ricerca — icone originali ridisegnate mantenendone il significato
 - Pannello ordini unità (attacca/mantieni/pattuglia/ritira…) e schermata di progettazione ricolorati nella stessa tonalità verde, preservando le icone originali e i colori semantici delle barre di confronto statistiche (blu/rosso/giallo)
+- Menu di lancio (schermata iniziale e sottomenu) rimasterizzato nello stesso stile «vetro» verde dell'HUD: pannello dei pulsanti con riempimento scuro verdastro e bordo verde luminoso, voci di menu evidenziate in verde al passaggio del mouse e banner laterale del titolo in verde
 - Nuovo logo del menu principale
 
 ### Gameplay/UX

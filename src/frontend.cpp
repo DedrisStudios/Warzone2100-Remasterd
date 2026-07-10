@@ -725,6 +725,14 @@ static void displayBigSlider(WIDGET *psWidget, UDWORD xOffset, UDWORD yOffset)
 	iV_DrawImage(IntImages, IMAGE_SLIDER_BIGBUT, x + 3 + sx, y + 3);								//draw amount
 }
 
+// DedrisRemastered: accento verde "Project" del reskin, in tono con l'HUD in
+// gioco (stessa famiglia di verde della palette dell'HUD). Usato per l'hover dei
+// pulsanti del menu e per il testo laterale del titolo.
+static inline PIELIGHT frontendAccentGreen()
+{
+	return pal_RGBA(120, 240, 150, 255);
+}
+
 // ////////////////////////////////////////////////////////////////////////////
 // show text written on its side.
 static void displayTextAt270(WIDGET *psWidget, UDWORD xOffset, UDWORD yOffset)
@@ -745,7 +753,8 @@ static void displayTextAt270(WIDGET *psWidget, UDWORD xOffset, UDWORD yOffset)
 	fy = yOffset + psWidget->y() + cache.wzText.width();
 
 	cache.wzText.render(fx + 2, fy + 2, WZCOL_GREY, 270.f);
-	cache.wzText.render(fx, fy, WZCOL_TEXT_BRIGHT, 270.f);
+	// DedrisRemastered: banner laterale del titolo in verde "Project".
+	cache.wzText.render(fx, fy, frontendAccentGreen(), 270.f);
 }
 
 // ////////////////////////////////////////////////////////////////////////////
@@ -821,7 +830,8 @@ void displayTextOption(WIDGET *psWidget, UDWORD xOffset, UDWORD yOffset)
 	{
 		if (hilight)													// hilight
 		{
-			colour = WZCOL_TEXT_BRIGHT;
+			// DedrisRemastered: hover in verde "Project", coerente con l'HUD.
+			colour = frontendAccentGreen();
 		}
 		else if (psWidget->id == FRONTEND_HYPERLINK || psWidget->id == FRONTEND_DONATELINK || psWidget->id == FRONTEND_CHATLINK) // special case for our hyperlink
 		{
@@ -927,7 +937,13 @@ public:
 	{
 		const int x0 = xOffset + x();
 		const int y0 = yOffset + y();
-		pie_UniTransBoxFill(x0, y0, x0 + width(), y0 + height(), pal_RGBA(0, 0, 0, 110));
+		const int x1 = x0 + width();
+		const int y1 = y0 + height();
+		// DedrisRemastered: "vetro verde" — riempimento scuro leggermente verde
+		// (stesso tono dello sfondo dell'HUD) con un bordo verde luminoso, così il
+		// pannello del menu principale è coerente col reskin dell'HUD in gioco.
+		pie_UniTransBoxFill(x0, y0, x1, y1, pal_RGBA(6, 26, 14, 150));
+		iV_Box(x0, y0, x1 - 1, y1 - 1, pal_RGBA(90, 235, 130, 90));
 	}
 };
 
