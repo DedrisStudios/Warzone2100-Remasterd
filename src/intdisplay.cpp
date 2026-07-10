@@ -364,7 +364,14 @@ void IntFancyButton::displayIfHighlight(int xOffset, int yOffset)
 {
 	if (isHighlighted())
 	{
-		iV_DrawImage(IntImages, buttonType == TOPBUTTON ? IMAGE_BUT_HILITE : IMAGE_BUTB_HILITE, xOffset + x(), yOffset + y());
+		// DedrisRemastered (OVERWATCH-C2 HUD): hover = a green underline rail plus a
+		// subtle green edge (the accent as state), replacing the old highlight sprite.
+		const int bx0 = xOffset + x();
+		const int by0 = yOffset + y();
+		const int bx1 = bx0 + width();
+		const int by1 = by0 + height();
+		iV_Box(bx0, by0, bx1 - 1, by1 - 1, pal_RGBA(51, 255, 158, 130));
+		pie_UniTransBoxFill(bx0 + 1, by1 - 3, bx1 - 1, by1, pal_RGBA(51, 255, 158, 255));
 	}
 }
 
@@ -966,24 +973,21 @@ bool intInitialiseGraphics()
 // Clear a button bitmap. ( copy the button background ).
 void IntFancyButton::displayClear(int xOffset, int yOffset)
 {
-	UWORD buttonId = 0;
-	switch (buttonType)
+	// DedrisRemastered (OVERWATCH-C2 HUD): button cells are drawn procedurally as modern
+	// near-black tactical cells (sub-slab body + subtle border, darkened when pressed),
+	// replacing the old sprite backgrounds. Applies to every IntFancyButton-derived cell
+	// (object / stats / production / group / transport buttons) for one cohesive look.
+	const int bx0 = xOffset + x();
+	const int by0 = yOffset + y();
+	const int bx1 = bx0 + width();
+	const int by1 = by0 + height();
+	const PIELIGHT body = buttonBackgroundEmpty ? pal_RGBA(16, 21, 19, 230) : pal_RGBA(20, 26, 24, 245);
+	pie_UniTransBoxFill(bx0, by0, bx1, by1, body);
+	if (isDown())
 	{
-		case IntFancyButton::ButtonType::TOPBUTTON:
-			if (buttonBackgroundEmpty)
-			{
-				buttonId = (isDown() ? IMAGE_BUT_EMPTY_DOWN : IMAGE_BUT_EMPTY_UP);
-			}
-			else
-			{
-				buttonId = (isDown() ? IMAGE_BUT0_DOWN : IMAGE_BUT0_UP);
-			}
-			break;
-		case IntFancyButton::ButtonType::BTMBUTTON:
-			buttonId = (isDown() ? IMAGE_BUTB0_DOWN : IMAGE_BUTB0_UP);
-			break;
+		pie_UniTransBoxFill(bx0, by0, bx1, by1, pal_RGBA(0, 0, 0, 70));
 	}
-	iV_DrawImage(IntImages, buttonId, xOffset + x(), yOffset + y());
+	iV_Box(bx0, by0, bx1 - 1, by1 - 1, pal_RGBA(30, 38, 35, 255));
 }
 
 // Create a button by rendering an IMD object into it.
