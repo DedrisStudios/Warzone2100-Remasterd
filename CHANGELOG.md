@@ -23,6 +23,7 @@ Tutte le modifiche del progetto, dalla più recente. Le regole di aggiornamento 
 - La build Emscripten funziona anche da directory con spazi nel percorso
 
 ### Documentazione
+- Aggiunto Bartolo Illiano (Software Engineer, project Reforge) alla sezione DedrisStudios del file AUTHORS
 - Aggiunto CLAUDE.md che carica le istruzioni di AGENTS.md nelle sessioni Claude Code
 - AGENTS.md ampliato con l'esito dell'audit del sorgente: mappa zone rosse/verdi del motore (§9), tabella dei limiti hardcoded (§10), override asset via PhysFS/mod (§11), punti da toccare per il rebranding (§12), appunti su SDL3/MoltenVK/Emscripten (§13)
 - Riscritto il README come presentazione del progetto Remasterd
