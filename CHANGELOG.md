@@ -8,6 +8,10 @@ Tutte le modifiche del progetto, dalla più recente. Le regole di aggiornamento 
 - Tutti i 23 cursori di gioco rimasterizzati in alta definizione (32px nativi, hotspot allineati agli originali)
 - Sfondi dei menu (backdrop) e schermata crediti rimasterizzati in HD *(locale, non nel repo — asset del submodule texpages)*
 - I bersagli nemici distruttibili (unità, strutture e feature) vengono evidenziati con parentesi angolari rosse
+- Icona dell'app macOS aggiornata col logo Warzone 2100 Reforged
+- Overlay scuro semitrasparente dietro i pulsanti del menu principale, per migliorare la leggibilità dei testi sopra lo sfondo
+- Interfaccia di gioco (HUD) rimasterizzata: pulsanti del reticolo comandi, cornici, schede, barre di avanzamento e icone (costruzione, progetta, fabbrica, ricerca, mappa intel, annulla)
+- Nuovo logo del menu principale
 
 ### Gameplay/UX
 - Gli ordini col tasto destro sono attivi di default

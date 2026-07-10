@@ -918,17 +918,31 @@ void addTopForm(bool wide)
 	widgAddForm(psWScreen, &sFormInit);
 }
 
+// DedrisRemastered: pannello "vetro" con un leggero overlay scuro dietro i
+// pulsanti, così i testi restano leggibili sopra lo sfondo del menu principale.
+class IntFormMenuScrim : public W_FORM
+{
+public:
+	void display(int xOffset, int yOffset) override
+	{
+		const int x0 = xOffset + x();
+		const int y0 = yOffset + y();
+		pie_UniTransBoxFill(x0, y0, x0 + width(), y0 + height(), pal_RGBA(0, 0, 0, 110));
+	}
+};
+
 // ////////////////////////////////////////////////////////////////////////////
 void addBottomForm(bool wide, bool transparent)
 {
 	WIDGET *parent = widgGetFromID(psWScreen, FRONTEND_BACKDROP);
 
 	// DedrisRemastered: se transparent, il pannello è un semplice contenitore
-	// "vetro" (nessuno sfondo blu), così i pulsanti galleggiano sullo sfondo.
+	// "vetro" con un leggero overlay scuro (IntFormMenuScrim) dietro i pulsanti,
+	// così i pulsanti galleggiano sullo sfondo restando ben leggibili.
 	std::shared_ptr<W_FORM> botForm;
 	if (transparent)
 	{
-		botForm = std::make_shared<IntFormTransparent>();
+		botForm = std::make_shared<IntFormMenuScrim>();
 	}
 	else
 	{
