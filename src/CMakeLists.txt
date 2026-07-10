@@ -91,6 +91,12 @@ endif()
 file(GLOB HEADERS "*.h" "3rdparty/*.h" "titleui/*.h" "titleui/*/*.h" "hci/*.h" "input/*.h" "screens/*.h" "steering/*.h")
 file(GLOB SRC "*.cpp" "3rdparty/*.cpp" "titleui/*.cpp" "titleui/*/*.cpp" "hci/*.cpp" "input/*.cpp" "screens/*.cpp" "steering/*.cpp")
 
+# Ignora i file sidecar AppleDouble "._*" che macOS crea sui volumi exFAT: la glob
+# li raccoglie come sorgenti e il compilatore fallisce sui byte nulli. Li filtriamo
+# qui così nemmeno un reconfigure può reintrodurli nel grafo di build.
+list(FILTER HEADERS EXCLUDE REGEX "/\\._[^/]*$")
+list(FILTER SRC EXCLUDE REGEX "/\\._[^/]*$")
+
 set(_additionalSourceFiles)
 if(CMAKE_SYSTEM_NAME MATCHES "Windows")
 	set(_additionalSourceFiles "${CMAKE_CURRENT_BINARY_DIR}/warzone2100.rc")

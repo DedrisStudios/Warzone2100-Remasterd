@@ -5,6 +5,10 @@
 *.log
 *.out
 
+# macOS AppleDouble sidecar files (created on exFAT/network volumes):
+._*
+.DS_Store
+
 # Generated binary files:
 *.o
 *.lo

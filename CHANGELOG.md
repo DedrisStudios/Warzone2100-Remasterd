@@ -28,8 +28,11 @@ Tutte le modifiche del progetto, dalla più recente. Le regole di aggiornamento 
 - La build Emscripten funziona anche da directory con spazi nel percorso
 - iPad/touch: un solo tocco (tap) impartisce direttamente gli ordini di movimento/attacco (ordini col tasto destro disattivati nella build touch)
 - iPad/touch: la build applica sempre i tasti di default aggiornati, ignorando eventuali keymap.json obsoleti (i pulsanti touch a schermo funzionano sempre)
+- Script di build macOS portabile nel repo (`build-mac.sh` + `wz-env.sh`) con configurazione automatica al primo avvio, e launcher cliccabili dal Finder `Compila e Avvia.command` / `Avvia Gioco.command`
+- Build affidabile su volumi exFAT: il glob dei sorgenti CMake ignora i file AppleDouble `._*`
 
 ### Documentazione
+- Aggiunta la guida rapida alla build macOS (`BUILD-RAPIDA.md`); AGENTS.md aggiornato con lo script di build in-repo, i launcher cliccabili e il filtro dei file `._*`
 - Aggiunto Bartolo Illiano (Software Engineer, project Reforge) alla sezione DedrisStudios del file AUTHORS
 - Aggiunto CLAUDE.md che carica le istruzioni di AGENTS.md nelle sessioni Claude Code
 - AGENTS.md ampliato con l'esito dell'audit del sorgente: mappa zone rosse/verdi del motore (§9), tabella dei limiti hardcoded (§10), override asset via PhysFS/mod (§11), punti da toccare per il rebranding (§12), appunti su SDL3/MoltenVK/Emscripten (§13)
