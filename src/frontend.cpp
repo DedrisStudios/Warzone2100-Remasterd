@@ -725,12 +725,22 @@ static void displayBigSlider(WIDGET *psWidget, UDWORD xOffset, UDWORD yOffset)
 	iV_DrawImage(IntImages, IMAGE_SLIDER_BIGBUT, x + 3 + sx, y + 3);								//draw amount
 }
 
-// DedrisRemastered: accento verde "Project" del reskin, in tono con l'HUD in
-// gioco (stessa famiglia di verde della palette dell'HUD). Usato per l'hover dei
-// pulsanti del menu e per il testo laterale del titolo.
-static inline PIELIGHT frontendAccentGreen()
+// DedrisRemastered: palette verde "Project" del reskin per il menu, in tono con
+// l'HUD in gioco. Accento acceso per l'hover, verde medio per le voci a riposo e
+// verde-grigio spento per quelle non disponibili — così i testi del menu non sono
+// più viola/lavanda (WZCOL_TEXT_MEDIUM/DARK, colori globali che qui NON tocchiamo
+// per non alterare tutto il testo del gioco).
+static inline PIELIGHT frontendAccentGreen()   // hover / evidenziazione
 {
-	return pal_RGBA(120, 240, 150, 255);
+	return pal_RGBA(140, 245, 165, 255);
+}
+static inline PIELIGHT frontendMenuGreen()     // voce di menu a riposo
+{
+	return pal_RGBA(110, 190, 135, 255);
+}
+static inline PIELIGHT frontendMenuGreenDim()  // voce di menu non disponibile
+{
+	return pal_RGBA(95, 120, 100, 255);
 }
 
 // ////////////////////////////////////////////////////////////////////////////
@@ -824,13 +834,14 @@ void displayTextOption(WIDGET *psWidget, UDWORD xOffset, UDWORD yOffset)
 
 	if (greyOut)														// unavailable
 	{
-		colour = WZCOL_TEXT_DARK;
+		// DedrisRemastered: verde-grigio spento invece del viola scuro globale.
+		colour = frontendMenuGreenDim();
 	}
 	else															// available
 	{
 		if (hilight)													// hilight
 		{
-			// DedrisRemastered: hover in verde "Project", coerente con l'HUD.
+			// DedrisRemastered: hover in verde "Project" acceso, coerente con l'HUD.
 			colour = frontendAccentGreen();
 		}
 		else if (psWidget->id == FRONTEND_HYPERLINK || psWidget->id == FRONTEND_DONATELINK || psWidget->id == FRONTEND_CHATLINK) // special case for our hyperlink
@@ -839,7 +850,8 @@ void displayTextOption(WIDGET *psWidget, UDWORD xOffset, UDWORD yOffset)
 		}
 		else														// don't highlight
 		{
-			colour = WZCOL_TEXT_MEDIUM;
+			// DedrisRemastered: voce a riposo in verde medio invece del lavanda globale.
+			colour = frontendMenuGreen();
 		}
 	}
 
