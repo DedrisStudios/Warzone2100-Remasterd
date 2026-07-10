@@ -253,10 +253,10 @@ void PowerBar::display(int xOffset, int yOffset)
 		fx += ManPow;
 	}
 
-	const int availEnd = fillLeft + Avail; // available power (cyan-green gradient)
+	const int availEnd = std::min(bx1 - 2, fillLeft + Avail); // available power, clamped inside the track
 	if (availEnd > fx)
 	{
-		const int bands = 24;
+		const int bands = 12; // few bands = smooth gradient at a modest draw-call cost (WebGL2/iPad)
 		const int span = availEnd - fx;
 		for (int b = 0; b < bands; ++b)
 		{
@@ -268,7 +268,7 @@ void PowerBar::display(int xOffset, int yOffset)
 			                    pal_RGBA((int)(14 + 33 * t), (int)(61 + 163 * t), (int)(42 + 158 * t), 255));
 		}
 		const int pulse = std::min(255, 205 + (int)(50 * sin(realTime / 140.0))); // pulsing head crest
-		pie_UniTransBoxFill(availEnd - 2, tby0, availEnd + 1, tby1, pal_RGBA(124, 255, 232, pulse));
+		pie_UniTransBoxFill(std::max(fillLeft, availEnd - 2), tby0, availEnd + 1, tby1, pal_RGBA(124, 255, 232, pulse));
 	}
 
 	for (int k = 1; k < 4; ++k) // 25% scale ticks
