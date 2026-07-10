@@ -7,7 +7,7 @@ Tutte le modifiche del progetto, dalla più recente. Le regole di aggiornamento 
 ### Grafica
 - Tutti i 23 cursori di gioco rimasterizzati in alta definizione (32px nativi, hotspot allineati agli originali)
 - Sfondi dei menu (backdrop) e schermata crediti rimasterizzati in HD *(locale, non nel repo — asset del submodule texpages)*
-- Lo sfondo del menu non si deforma né si ingrandisce al ridimensionamento della finestra: viene mostrato per intero mantenendo le proporzioni reali dell'immagine (adattamento «fit», con eventuali bande ai bordi), invece di essere stirato in un rapporto 4:3 fisso
+- Lo sfondo del menu non si deforma né si ingrandisce al ridimensionamento della finestra: viene mostrato per intero mantenendo le proporzioni reali dell'immagine (adattamento «fit»), invece di essere stirato in un rapporto 4:3 fisso. Le eventuali bande ai bordi sono riempite da una versione sfocata e soffusa della stessa immagine (effetto «vetro smerigliato») anziché dal nero
 - I bersagli nemici distruttibili (unità, strutture e feature) vengono evidenziati con parentesi angolari rosse
 - Icona dell'app macOS aggiornata col logo Warzone 2100 Reforged
 - Overlay scuro semitrasparente dietro i pulsanti del menu principale, per migliorare la leggibilità dei testi sopra lo sfondo

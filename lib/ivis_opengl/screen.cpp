@@ -66,6 +66,9 @@ static char		screendump_filename[PATH_MAX];
 static bool		screendump_required = false;
 
 static GFX *backdropGfx = nullptr;
+// DedrisRemastered: miniatura della stessa immagine, disegnata a tutto schermo con
+// filtro bilineare per fare da sfondo SFOCATO dietro le bande della modalità "fit".
+static GFX *backdropBlurGfx = nullptr;
 static bool backdropIsMapPreview = false;
 // DedrisRemastered: proporzioni reali dell'immagine di sfondo del menu, usate per
 // mostrarla intera (fit/contain) senza zoom né deformazione al variare della
@@ -97,6 +100,7 @@ bool screenInitialise()
 
 	// Generate backdrop render
 	backdropGfx = new GFX(GFX_TEXTURE, 2);
+	backdropBlurGfx = new GFX(GFX_TEXTURE, 2); // DedrisRemastered: sfondo sfocato dietro le bande
 
 	return true;
 }
@@ -235,6 +239,8 @@ void screenShutDown()
 
 	delete backdropGfx;
 	backdropGfx = nullptr;
+	delete backdropBlurGfx;
+	backdropBlurGfx = nullptr;
 
 	delete pie_internal::rectBuffer;
 	pie_internal::rectBuffer = nullptr;
@@ -296,6 +302,16 @@ void screen_SetBackDropFromFile(const char *filename)
 	{
 		backdropTexAspect = static_cast<float>(backdropDims.width) / static_cast<float>(backdropDims.height);
 	}
+	// DedrisRemastered: miniatura sfocata dietro le bande. Il backdrop è un .ktx2 (Basis)
+	// il cui loader compresso non produce una texture così piccola (a 64px fallisce),
+	// perciò lo decodifichiamo a piena risoluzione e lo riduciamo su CPU a ~64px:
+	// ingrandito poi a tutto schermo con filtro lineare fa da sfondo sfocato ("frosted").
+	auto blurImg = gfx_api::loadUncompressedImageFromFile(filename, gfx_api::pixel_format_target::texture_2d, gfx_api::texture_type::user_interface, -1, -1, true);
+	if (blurImg)
+	{
+		blurImg->scale_image_max_size(64, 64);
+		backdropBlurGfx->loadTexture(std::move(*blurImg), gfx_api::texture_type::user_interface, "mem::backdrop_blur");
+	}
 	// Generate coordinates and put them into VBOs
 	screen_GenerateCoordinatesAndVBOs();
 }
@@ -321,6 +337,18 @@ void screen_Display()
 {
 	// Draw backdrop
 	const auto& modelViewProjectionMatrix = glm::ortho(0.f, (float)pie_GetVideoBufferWidth(), (float)pie_GetVideoBufferHeight(), 0.f);
+
+	// DedrisRemastered: prima lo sfondo SFOCATO a tutto schermo (miniatura ingrandita
+	// con filtro bilineare, leggermente scurita), così le bande della modalità "fit"
+	// mostrano una versione soffusa dell'immagine invece del nero. Solo per i backdrop
+	// da file (non per l'anteprima mappa).
+	if (!backdropIsMapPreview && backdropBlurGfx != nullptr)
+	{
+		gfx_api::VideoPSO::get().bind();
+		gfx_api::VideoPSO::get().bind_constants({ modelViewProjectionMatrix, glm::vec2(0.f), glm::vec2(0.f), glm::vec4(0.55f, 0.55f, 0.55f, 1.f), 0 });
+		backdropBlurGfx->draw<gfx_api::VideoPSO>(modelViewProjectionMatrix);
+	}
+
 	gfx_api::BackDropPSO::get().bind();
 	gfx_api::BackDropPSO::get().bind_constants({ modelViewProjectionMatrix, glm::vec2(0.f), glm::vec2(0.f), glm::vec4(1), 0 });
 	backdropGfx->draw<gfx_api::BackDropPSO>(modelViewProjectionMatrix);
@@ -409,6 +437,17 @@ static void screen_GenerateCoordinatesAndVBOs()
 	gfx_api::gfxFloat texcoords[8] = { 0.0f, 0.0f,  tx, 0.0,  0.0f, ty,  tx, ty };
 	gfx_api::gfxFloat vertices[8] = { x1, y1,  x2, y1,  x1, y2,  x2, y2 };
 	backdropGfx->buffers(4, vertices, texcoords);
+
+	// DedrisRemastered: quad a tutto schermo per lo sfondo sfocato (lo stretch non si
+	// nota sotto la sfocatura); riempie le bande lasciate dall'immagine adattata.
+	gfx_api::gfxFloat blurVertices[8] = {
+		0.f, 0.f,
+		static_cast<gfx_api::gfxFloat>(screenWidth), 0.f,
+		0.f, static_cast<gfx_api::gfxFloat>(screenHeight),
+		static_cast<gfx_api::gfxFloat>(screenWidth), static_cast<gfx_api::gfxFloat>(screenHeight)
+	};
+	gfx_api::gfxFloat blurTexcoords[8] = { 0.f, 0.f,  1.f, 0.f,  0.f, 1.f,  1.f, 1.f };
+	backdropBlurGfx->buffers(4, blurVertices, blurTexcoords);
 }
 
 void screen_Upload(iV_Image&& newBackdropImage)
