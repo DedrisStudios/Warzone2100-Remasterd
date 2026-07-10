@@ -66,14 +66,13 @@ static char		screendump_filename[PATH_MAX];
 static bool		screendump_required = false;
 
 static GFX *backdropGfx = nullptr;
-// DedrisRemastered: miniatura della stessa immagine, disegnata a tutto schermo con
-// filtro bilineare per fare da sfondo SFOCATO dietro le bande della modalità "fit".
-static GFX *backdropBlurGfx = nullptr;
 static bool backdropIsMapPreview = false;
-// DedrisRemastered: proporzioni reali dell'immagine di sfondo del menu, usate per
-// mostrarla intera (fit/contain) senza zoom né deformazione al variare della
-// finestra, invece di schiacciarla in un rapporto 4:3 fisso. Aggiornato al caricamento.
-static float backdropTexAspect = 4.f / 3.f;
+// DedrisRemastered: i backdrop sono immagini 16:9 che la pipeline Basis codifica come
+// texture QUADRATA (necessario per la texture UI: le dimensioni non-quadrate verrebbero
+// riempite a potenza-di-due lasciando bande nere). L'immagine finisce quindi "stirata"
+// nel quadrato; disegnandola su un quad 16:9 (cover) la si de-stira e riempie lo schermo
+// senza deformazione, invece del vecchio 4:3 che la mostrava schiacciata.
+static float backdropTexAspect = 16.f / 9.f;
 
 static bool perfStarted = false;
 struct PERF_STORE
@@ -100,7 +99,6 @@ bool screenInitialise()
 
 	// Generate backdrop render
 	backdropGfx = new GFX(GFX_TEXTURE, 2);
-	backdropBlurGfx = new GFX(GFX_TEXTURE, 2); // DedrisRemastered: sfondo sfocato dietro le bande
 
 	return true;
 }
@@ -239,8 +237,6 @@ void screenShutDown()
 
 	delete backdropGfx;
 	backdropGfx = nullptr;
-	delete backdropBlurGfx;
-	backdropBlurGfx = nullptr;
 
 	delete pie_internal::rectBuffer;
 	pie_internal::rectBuffer = nullptr;
@@ -295,21 +291,6 @@ void screen_SetBackDropFromFile(const char *filename)
 	int maxTextureSize = gfx_api::context::get().get_context_value(gfx_api::context::context_value::MAX_TEXTURE_SIZE);
 	backdropGfx->loadTexture(filename, gfx_api::texture_type::user_interface, maxTextureSize, maxTextureSize);
 	backdropIsMapPreview = false;
-	// DedrisRemastered: decodifichiamo l'immagine a piena risoluzione (il backdrop è un
-	// .ktx2 Basis: la texture compressa non riporta dimensioni affidabili e il suo loader
-	// non produce texture minuscole). Dalle dimensioni REALI dell'immagine ricaviamo le
-	// proporzioni per l'adattamento "fit" (niente deformazione né 4:3 forzato), e una
-	// copia ridotta a ~64px fa da sfondo sfocato ("frosted") dietro le bande.
-	auto blurImg = gfx_api::loadUncompressedImageFromFile(filename, gfx_api::pixel_format_target::texture_2d, gfx_api::texture_type::user_interface, -1, -1, true);
-	if (blurImg)
-	{
-		if (blurImg->width() > 0 && blurImg->height() > 0)
-		{
-			backdropTexAspect = static_cast<float>(blurImg->width()) / static_cast<float>(blurImg->height());
-		}
-		blurImg->scale_image_max_size(64, 64);
-		backdropBlurGfx->loadTexture(std::move(*blurImg), gfx_api::texture_type::user_interface, "mem::backdrop_blur");
-	}
 	// Generate coordinates and put them into VBOs
 	screen_GenerateCoordinatesAndVBOs();
 }
@@ -335,18 +316,6 @@ void screen_Display()
 {
 	// Draw backdrop
 	const auto& modelViewProjectionMatrix = glm::ortho(0.f, (float)pie_GetVideoBufferWidth(), (float)pie_GetVideoBufferHeight(), 0.f);
-
-	// DedrisRemastered: prima lo sfondo SFOCATO a tutto schermo (miniatura ingrandita
-	// con filtro bilineare, leggermente scurita), così le bande della modalità "fit"
-	// mostrano una versione soffusa dell'immagine invece del nero. Solo per i backdrop
-	// da file (non per l'anteprima mappa).
-	if (!backdropIsMapPreview && backdropBlurGfx != nullptr)
-	{
-		gfx_api::VideoPSO::get().bind();
-		gfx_api::VideoPSO::get().bind_constants({ modelViewProjectionMatrix, glm::vec2(0.f), glm::vec2(0.f), glm::vec4(0.55f, 0.55f, 0.55f, 1.f), 0 });
-		backdropBlurGfx->draw<gfx_api::VideoPSO>(modelViewProjectionMatrix);
-	}
-
 	gfx_api::BackDropPSO::get().bind();
 	gfx_api::BackDropPSO::get().bind_constants({ modelViewProjectionMatrix, glm::vec2(0.f), glm::vec2(0.f), glm::vec4(1), 0 });
 	backdropGfx->draw<gfx_api::BackDropPSO>(modelViewProjectionMatrix);
@@ -394,21 +363,18 @@ static void screen_GenerateCoordinatesAndVBOs()
 	gfx_api::gfxFloat tx = 1, ty = 1;
 	int scale = 0, w = 0, h = 0;
 	// DedrisRemastered: adatta lo sfondo alle sue proporzioni REALI (backdropTexAspect)
-	// in modalità "contain" (fit): l'intera immagine resta visibile senza zoom né
-	// deformazione, con eventuali bande ai bordi quando la finestra non ha le stesse
-	// proporzioni dell'immagine. (Con "<" invece di ">" si otterrebbe il "cover".)
+	// in modalità "cover": riempie sempre lo schermo senza deformare l'immagine
+	// (ritaglio minimo dei bordi quando la finestra non è nelle stesse proporzioni).
 	const float aspect = screenWidth / (float)screenHeight, backdropAspect = backdropTexAspect;
 
-	if (aspect > backdropAspect)
+	if (aspect < backdropAspect)
 	{
-		// finestra più larga dell'immagine -> bande verticali ai lati (pillarbox)
 		int offset = static_cast<int>((screenWidth - screenHeight * backdropAspect) / 2);
 		x1 += offset;
 		x2 -= offset;
 	}
 	else
 	{
-		// finestra più stretta/alta dell'immagine -> bande sopra/sotto (letterbox)
 		int offset = static_cast<int>((screenHeight - screenWidth / backdropAspect) / 2);
 		y1 += offset;
 		y2 -= offset;
@@ -435,17 +401,6 @@ static void screen_GenerateCoordinatesAndVBOs()
 	gfx_api::gfxFloat texcoords[8] = { 0.0f, 0.0f,  tx, 0.0,  0.0f, ty,  tx, ty };
 	gfx_api::gfxFloat vertices[8] = { x1, y1,  x2, y1,  x1, y2,  x2, y2 };
 	backdropGfx->buffers(4, vertices, texcoords);
-
-	// DedrisRemastered: quad a tutto schermo per lo sfondo sfocato (lo stretch non si
-	// nota sotto la sfocatura); riempie le bande lasciate dall'immagine adattata.
-	gfx_api::gfxFloat blurVertices[8] = {
-		0.f, 0.f,
-		static_cast<gfx_api::gfxFloat>(screenWidth), 0.f,
-		0.f, static_cast<gfx_api::gfxFloat>(screenHeight),
-		static_cast<gfx_api::gfxFloat>(screenWidth), static_cast<gfx_api::gfxFloat>(screenHeight)
-	};
-	gfx_api::gfxFloat blurTexcoords[8] = { 0.f, 0.f,  1.f, 0.f,  0.f, 1.f,  1.f, 1.f };
-	backdropBlurGfx->buffers(4, blurVertices, blurTexcoords);
 }
 
 void screen_Upload(iV_Image&& newBackdropImage)

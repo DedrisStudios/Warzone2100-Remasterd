@@ -7,7 +7,7 @@ Tutte le modifiche del progetto, dalla più recente. Le regole di aggiornamento 
 ### Grafica
 - Tutti i 23 cursori di gioco rimasterizzati in alta definizione (32px nativi, hotspot allineati agli originali)
 - Sfondi dei menu (backdrop) e schermata crediti rimasterizzati in HD *(locale, non nel repo — asset del submodule texpages)*
-- Lo sfondo del menu non si deforma né si ingrandisce al ridimensionamento della finestra: viene mostrato per intero mantenendo le proporzioni reali dell'immagine (adattamento «fit»), invece di essere stirato in un rapporto 4:3 fisso. Le eventuali bande ai bordi sono riempite da una versione sfocata e soffusa della stessa immagine (effetto «vetro smerigliato») anziché dal nero
+- Lo sfondo del menu non appare più schiacciato/deformato: viene disegnato nelle proporzioni corrette 16:9 (prima era mostrato stirato in un rapporto 4:3) e riempie tutta la finestra senza bande nere
 - I bersagli nemici distruttibili (unità, strutture e feature) vengono evidenziati con parentesi angolari rosse
 - Icona dell'app macOS aggiornata col logo Warzone 2100 Reforged
 - Overlay scuro semitrasparente dietro i pulsanti del menu principale, per migliorare la leggibilità dei testi sopra lo sfondo
@@ -27,7 +27,6 @@ Tutte le modifiche del progetto, dalla più recente. Le regole di aggiornamento 
 - `SPACE` non attiva più la camera di inseguimento: ora è scorciatoia secondaria per *Seleziona tutte le unità da combattimento*
 
 ### Build/Web
-- I backdrop del menu vengono codificati (Basis/KTX2) mantenendo il rapporto 16:9 invece di essere forzati a una texture quadrata: così non appaiono più deformati/stirati nel gioco
 - Versione iPad: wrapper Cordova con server HTTP locale (per i thread WASM in WKWebView), script di setup/deploy e icona app
 - Build web: schermata di avvio minimale con logo Reforged e tasti Play / Play again, pensata per il deploy su iPad
 - La build Emscripten funziona anche da directory con spazi nel percorso

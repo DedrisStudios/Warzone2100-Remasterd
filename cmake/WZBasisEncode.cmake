@@ -52,7 +52,6 @@ endfunction()
 # WZ_BASIS_ENCODE_TEXTURES(OUTPUT_DIR outputDir
 #			   TYPE <TEXTURE, NORMALMAP, SPECULARMAP, ALPHAMASK, UITEXTURE>
 #			   [RESIZE <512 | 1024 | 2048 ...>]
-#			   [RESIZE_HEIGHT <height>]
 #			   [UASTC_LEVEL <0 | 1 | 2 | 3 | 4> = 2]
 #			   [RDO]
 #			   FILES [files...]
@@ -69,7 +68,6 @@ endfunction()
 # - For "ALPHAMASK": an RGBA PNG. Only the alpha channel is extracted and used.
 #
 # If RESIZE is specified, the texture images will be resized to RESIZE x RESIZE dimensions (if they aren't already) as a first step.
-# If RESIZE_HEIGHT is also specified, the height uses that value instead (RESIZE x RESIZE_HEIGHT), preserving a non-square aspect ratio (e.g. 16:9 backdrops).
 #
 # If UASTC_LEVEL is specified, the -uastc_level parameter will be specified to set the UASTC encoding level:
 # > Range is [0,4], default is 2, higher=slower but higher quality.
@@ -82,7 +80,7 @@ function(WZ_BASIS_ENCODE_TEXTURES)
 	endif()
 
 	set(_options ALL RDO)
-	set(_oneValueArgs OUTPUT_DIR TYPE RESIZE RESIZE_HEIGHT ENCODING_TARGET TARGET_FOLDER UASTC_LEVEL)
+	set(_oneValueArgs OUTPUT_DIR TYPE RESIZE ENCODING_TARGET TARGET_FOLDER UASTC_LEVEL)
 	set(_multiValueArgs FILES)
 
 	CMAKE_PARSE_ARGUMENTS(_parsedArguments "${_options}" "${_oneValueArgs}" "${_multiValueArgs}" ${ARGN})
@@ -114,14 +112,7 @@ function(WZ_BASIS_ENCODE_TEXTURES)
 	# Construct variable encoding arguments
 	unset(_resample_arguments)
 	if(_parsedArguments_RESIZE)
-		# Height defaults to RESIZE (square). If RESIZE_HEIGHT is given, use it instead so
-		# a non-square aspect is preserved (e.g. 16:9 backdrops, kept from being squashed
-		# into a square texture).
-		set(_resample_height "${_parsedArguments_RESIZE}")
-		if(_parsedArguments_RESIZE_HEIGHT)
-			set(_resample_height "${_parsedArguments_RESIZE_HEIGHT}")
-		endif()
-		set(_resample_arguments "-resample" "${_parsedArguments_RESIZE}" "${_resample_height}")
+		set(_resample_arguments "-resample" "${_parsedArguments_RESIZE}" "${_parsedArguments_RESIZE}")
 	endif()
 	unset(_rdo_arguments)
 	unset(_type_dependent_arguments)
