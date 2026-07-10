@@ -9,6 +9,7 @@ Tutte le modifiche del progetto, dalla più recente. Le regole di aggiornamento 
 - HUD: barra dell'energia ridisegnata come strumento tattico — traccia scura, riempimento a gradiente verde→ciano con testa luminosa pulsante e tacche di scala al 25%
 - HUD: le celle-pulsante (liste fabbrica/ricerca/progettazione, gruppi, stato) diventano celle tattiche scure con evidenziazione a underline verde al passaggio del mouse
 - HUD: reticolo comandi ridisegnato — esagoni scuri tattici con icone verdi brillanti, rail verde sui pulsanti attivi/premuti e anello verde al passaggio del mouse (silhouette e disposizione a nido d'ape invariate)
+- Grafica di gioco: color-grade cinematografica leggera del campo di battaglia (tonemap filmico + vignettatura tenue) applicata alla copia scena→schermo, per un aspetto più moderno; la HUD resta nitida
 - Tutti i 23 cursori di gioco rimasterizzati in alta definizione (32px nativi, hotspot allineati agli originali)
 - Sfondi dei menu (backdrop) e schermata crediti rimasterizzati in HD *(locale, non nel repo — asset del submodule texpages)*
 - Lo sfondo del menu non appare più schiacciato/deformato: viene disegnato nelle proporzioni corrette 16:9 (prima era mostrato stirato in un rapporto 4:3) e riempie tutta la finestra senza bande nere
