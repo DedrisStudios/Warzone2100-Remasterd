@@ -18,10 +18,13 @@ Tutte le modifiche del progetto, dalla più recente. Le regole di aggiornamento 
 - Salvataggio rapido spostato su `F10`, screenshot su `F7`
 
 ### Build/Web
-- Build web: schermata di avvio minimale (solo pulsante Play) per il deploy su iPad
+- Versione iPad: wrapper Cordova con server HTTP locale (per i thread WASM in WKWebView), script di setup/deploy e icona app
+- Build web: schermata di avvio minimale con logo Reforged e tasti Play / Play again, pensata per il deploy su iPad
 - La build Emscripten funziona anche da directory con spazi nel percorso
 
 ### Documentazione
+- Aggiunto CLAUDE.md che carica le istruzioni di AGENTS.md nelle sessioni Claude Code
+- AGENTS.md ampliato con l'esito dell'audit del sorgente: mappa zone rosse/verdi del motore (§9), tabella dei limiti hardcoded (§10), override asset via PhysFS/mod (§11), punti da toccare per il rebranding (§12), appunti su SDL3/MoltenVK/Emscripten (§13)
 - Riscritto il README come presentazione del progetto Remasterd
 - Aggiunto AGENTS.md con le istruzioni operative del repo
 - Aggiunto questo changelog e la regola di tenerlo aggiornato (AGENTS.md §5)
