@@ -353,6 +353,13 @@
     </div>
   </div>
 
+<style id="wz-ipad-minimal">
+  /* iPad build: minimal launch screen — only the Play button */
+  header.mb-auto, footer.mt-auto { display: none !important; }
+  .cover-container { justify-content: center !important; }
+  #launch-game > *:not(.wz-keep) { display: none !important; }
+  #start-button { padding: 0.9rem 3.4rem; font-size: 1.8rem; }
+</style>
 <div class="w-100 vh-100" id="content_container">
 <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
   <header class="mb-auto">
@@ -386,8 +393,8 @@
   <main class="px-3" style="display: none;" id="launch-game">
     <h1>Launch the Web Edition</h1>
     <p class="lead"><svg class="bi me-1"><use href="#bi-check-circle"></use></svg>Classic look, <svg class="bi me-1"><use href="#bi-check-circle"></use></svg>Medium-quality textures, <svg class="bi me-1"><use href="#bi-check-circle"></use></svg>Campaign &amp; skirmish</p>
-    <p class="lead">
-      <button type="button" class="btn btn-lg btn-primary fw-bold btn-wz-start-game" id="start-button" onclick="startGame()">Play Now</button>
+    <p class="lead wz-keep">
+      <button type="button" class="btn btn-lg btn-primary fw-bold btn-wz-start-game" id="start-button" onclick="startGame()">Play</button>
     </p>
     <p class="mb-0 text-white" style="--bs-text-opacity: .4;">If this is your first time, this will download approximately 60MiB of data.</p>
     <p class="pb-2 text-white small" style="--bs-text-opacity: .5;">Plays Best With: <svg class="bi me-1"><use href="#bi-mouse2"></use></svg><svg class="bi me-1"><use href="#bi-keyboard"></use></svg>Mouse &amp; Keyboard<span class="px-2">|</span><a class="options-link" onclick="wz_open_options_modal();" href="#"><svg class="bi me-1"><use href="#bi-gear"></use></svg>View Options</a></p>

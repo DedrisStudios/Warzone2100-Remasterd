@@ -310,13 +310,13 @@ if(CMAKE_SYSTEM_NAME MATCHES "Emscripten")
 
 	target_link_options(warzone2100 PRIVATE "SHELL:-lidbfs.js") # Explicitly include IDBFS, see: https://github.com/emscripten-core/emscripten/issues/9406
 
-	target_link_options(warzone2100 PRIVATE "SHELL:--shell-file ${PROJECT_SOURCE_DIR}/platforms/emscripten/shell.html")
-	target_link_options(warzone2100 PRIVATE "SHELL:--pre-js ${PROJECT_SOURCE_DIR}/platforms/emscripten/prejs.js")
-	target_link_options(warzone2100 PRIVATE "SHELL:--post-js ${PROJECT_SOURCE_DIR}/platforms/emscripten/postjs.js")
+	target_link_options(warzone2100 PRIVATE "SHELL:--shell-file \"${PROJECT_SOURCE_DIR}/platforms/emscripten/shell.html\"")
+	target_link_options(warzone2100 PRIVATE "SHELL:--pre-js \"${PROJECT_SOURCE_DIR}/platforms/emscripten/prejs.js\"")
+	target_link_options(warzone2100 PRIVATE "SHELL:--post-js \"${PROJECT_SOURCE_DIR}/platforms/emscripten/postjs.js\"")
 
 	# Autorevision extern-postjs
 	add_dependencies(warzone2100 autorevision autorevision_externpostjs)
-	target_link_options(warzone2100 PRIVATE "SHELL:--extern-post-js ${CMAKE_CURRENT_BINARY_DIR}/extern-postjs.js")
+	target_link_options(warzone2100 PRIVATE "SHELL:--extern-post-js \"${CMAKE_CURRENT_BINARY_DIR}/extern-postjs.js\"")
 
 	target_link_options(warzone2100 PRIVATE "SHELL:-s MODULARIZE")
 	target_link_options(warzone2100 PRIVATE "SHELL:-s EXPORT_NAME=createWZModule")
@@ -326,14 +326,14 @@ if(CMAKE_SYSTEM_NAME MATCHES "Emscripten")
 	foreach(_data_file ${DATA_FILES})
 		get_filename_component(_foldername "${_data_file}" NAME_WE)
 		message(STATUS "COPYING DATA: ${_foldername}")
-		target_link_options(warzone2100 PRIVATE "SHELL:--preload-file ${_data_file}@/data/${_foldername}/")
+		target_link_options(warzone2100 PRIVATE "SHELL:--preload-file \"${_data_file}@/data/${_foldername}/\"")
 	endforeach()
 
 	# Bundle needed base fonts
 	foreach(_font_file ${DATA_FONTS})
 		get_filename_component(_fontname "${_font_file}" NAME)
 		message(STATUS "COPYING FONT FILE: ${_fontname} (from: ${_font_file})")
-		target_link_options(warzone2100 PRIVATE "SHELL:--preload-file ${_font_file}@/data/fonts/")
+		target_link_options(warzone2100 PRIVATE "SHELL:--preload-file \"${_font_file}@/data/fonts/\"")
 	endforeach()
 
 	# Bundle built-in mods
@@ -341,7 +341,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Emscripten")
 		file(RELATIVE_PATH _mods_file_relative_path "${DATA_MODS_BASE_DIR}" "${_mod_file}")
 		get_filename_component(_mods_file_subdir_path "${_mods_file_relative_path}" DIRECTORY)
 		message(STATUS "COPYING MOD FILE: mods/${_mods_file_relative_path}")
-		target_link_options(warzone2100 PRIVATE "SHELL:--preload-file ${_mod_file}@/data/mods/${_mods_file_subdir_path}/")
+		target_link_options(warzone2100 PRIVATE "SHELL:--preload-file \"${_mod_file}@/data/mods/${_mods_file_subdir_path}/\"")
 	endforeach()
 
 	# Bundle the translations
@@ -349,7 +349,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Emscripten")
 		if (NOT WZ_LOCALEDIR_ISABSOLUTE)
 			message(FATAL_ERROR "Expected absolute path for WZ_LOCALEDIR: ${WZ_LOCALEDIR}")
 		endif()
-		target_link_options(warzone2100 PRIVATE "SHELL:--preload-file ${wz2100_translations_LOCALE_FOLDER}@${WZ_LOCALEDIR}/")
+		target_link_options(warzone2100 PRIVATE "SHELL:--preload-file \"${wz2100_translations_LOCALE_FOLDER}@${WZ_LOCALEDIR}/\"")
 	endif()
 
 	# Cache preload data in browser (if possible)
