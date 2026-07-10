@@ -67,6 +67,10 @@ static bool		screendump_required = false;
 
 static GFX *backdropGfx = nullptr;
 static bool backdropIsMapPreview = false;
+// DedrisRemastered: proporzioni reali dell'immagine di sfondo del menu, usate per
+// mostrarla intera (fit/contain) senza zoom né deformazione al variare della
+// finestra, invece di schiacciarla in un rapporto 4:3 fisso. Aggiornato al caricamento.
+static float backdropTexAspect = 4.f / 3.f;
 
 static bool perfStarted = false;
 struct PERF_STORE
@@ -285,6 +289,13 @@ void screen_SetBackDropFromFile(const char *filename)
 	int maxTextureSize = gfx_api::context::get().get_context_value(gfx_api::context::context_value::MAX_TEXTURE_SIZE);
 	backdropGfx->loadTexture(filename, gfx_api::texture_type::user_interface, maxTextureSize, maxTextureSize);
 	backdropIsMapPreview = false;
+	// DedrisRemastered: aggiorna le proporzioni con quelle reali dell'immagine
+	// caricata, così il backdrop viene mostrato intero e non deformato.
+	auto backdropDims = backdropGfx->getTextureDimensions();
+	if (backdropDims.width > 0 && backdropDims.height > 0)
+	{
+		backdropTexAspect = static_cast<float>(backdropDims.width) / static_cast<float>(backdropDims.height);
+	}
 	// Generate coordinates and put them into VBOs
 	screen_GenerateCoordinatesAndVBOs();
 }
@@ -356,16 +367,22 @@ static void screen_GenerateCoordinatesAndVBOs()
 	gfx_api::gfxFloat x1 = 0, x2 = screenWidth, y1 = 0, y2 = screenHeight;
 	gfx_api::gfxFloat tx = 1, ty = 1;
 	int scale = 0, w = 0, h = 0;
-	const float aspect = screenWidth / (float)screenHeight, backdropAspect = 4 / (float)3;
+	// DedrisRemastered: adatta lo sfondo alle sue proporzioni REALI (backdropTexAspect)
+	// in modalità "contain" (fit): l'intera immagine resta visibile senza zoom né
+	// deformazione, con eventuali bande ai bordi quando la finestra non ha le stesse
+	// proporzioni dell'immagine. (Con "<" invece di ">" si otterrebbe il "cover".)
+	const float aspect = screenWidth / (float)screenHeight, backdropAspect = backdropTexAspect;
 
-	if (aspect < backdropAspect)
+	if (aspect > backdropAspect)
 	{
+		// finestra più larga dell'immagine -> bande verticali ai lati (pillarbox)
 		int offset = static_cast<int>((screenWidth - screenHeight * backdropAspect) / 2);
 		x1 += offset;
 		x2 -= offset;
 	}
 	else
 	{
+		// finestra più stretta/alta dell'immagine -> bande sopra/sotto (letterbox)
 		int offset = static_cast<int>((screenHeight - screenWidth / backdropAspect) / 2);
 		y1 += offset;
 		y2 -= offset;
