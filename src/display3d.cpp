@@ -1094,19 +1094,19 @@ void draw3DScene()
 	}
 	if (showFPS)
 	{
-		std::string fps = astringf("FPS: %d", frameRate());
-		txtShowFPS.setText(WzString::fromUtf8(fps), font_regular);
+		std::string fps = astringf("FPS %d", frameRate());
+		txtShowFPS.setText(WzString::fromUtf8(fps), font_small);
 		const unsigned width = txtShowFPS.width() + 10;
 		const unsigned height = 9; //txtShowFPS.height();
-		txtShowFPS.render(pie_GetVideoBufferWidth() - width, pie_GetVideoBufferHeight() - height, WZCOL_TEXT_BRIGHT);
+		txtShowFPS.render(pie_GetVideoBufferWidth() - width, pie_GetVideoBufferHeight() - height, pal_RGBA(150, 196, 170, 255)); // DedrisRemastered: telemetry style
 	}
 	if (showUNITCOUNT && selectedPlayer < MAX_PLAYERS)
 	{
-		std::string killdiff = astringf("Units: %u lost / %u built / %u killed", missionData.unitsLost, missionData.unitsBuilt, getSelectedPlayerUnitsKilled());
-		txtUnits.setText(WzString::fromUtf8(killdiff), font_regular);
+		std::string killdiff = astringf("LOST %u   BUILT %u   KILLED %u", missionData.unitsLost, missionData.unitsBuilt, getSelectedPlayerUnitsKilled());
+		txtUnits.setText(WzString::fromUtf8(killdiff), font_small);
 		const unsigned width = txtUnits.width() + 10;
 		const unsigned height = 9; //txtUnits.height();
-		txtUnits.render(pie_GetVideoBufferWidth() - width - ((showFPS) ? txtShowFPS.width() + 10 : 0), pie_GetVideoBufferHeight() - height, WZCOL_TEXT_BRIGHT);
+		txtUnits.render(pie_GetVideoBufferWidth() - width - ((showFPS) ? txtShowFPS.width() + 10 : 0), pie_GetVideoBufferHeight() - height, pal_RGBA(150, 196, 170, 255)); // DedrisRemastered: telemetry style
 	}
 	if (showORDERS)
 	{
