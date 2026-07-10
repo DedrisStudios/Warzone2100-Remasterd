@@ -745,6 +745,27 @@ void IntFormAnimated::display(int xOffset, int yOffset)
 	                   aBegin.height() + (aEnd.height() - aBegin.height()) * num / den);
 
 	RenderWindowFrame(FRAME_NORMAL, aCur.x(), aCur.y(), aCur.width(), aCur.height());
+
+	// DedrisRemastered (OVERWATCH-C2 HUD): "lit-slab" signature drawn procedurally
+	// (green zone) — a single luminous green accent rail along the bottom edge plus
+	// targeting-style corner L-brackets on two diagonal corners. The scarce green
+	// accent over the near-black slab body reads as a modern tactical command HUD.
+	{
+		const int lx0 = aCur.x();
+		const int ly0 = aCur.y();
+		const int lx1 = aCur.x() + aCur.width();
+		const int ly1 = aCur.y() + aCur.height();
+		if (aCur.width() > 24 && aCur.height() > 16)
+		{
+			const PIELIGHT rail = pal_RGBA(51, 255, 158, 255);
+			pie_UniTransBoxFill(lx0, ly1 - 3, lx1, ly1, rail);        // bottom accent rail
+			const int bl = 12;                                        // bracket leg length
+			iV_Line(lx0, ly0, lx0 + bl, ly0, rail);                   // top-left bracket
+			iV_Line(lx0, ly0, lx0, ly0 + bl, rail);
+			iV_Line(lx1 - bl, ly1, lx1, ly1, rail);                   // bottom-right bracket
+			iV_Line(lx1, ly1 - bl, lx1, ly1, rail);
+		}
+	}
 }
 
 // Display an image for a widget.
