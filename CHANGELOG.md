@@ -10,7 +10,8 @@ Tutte le modifiche del progetto, dalla più recente. Le regole di aggiornamento 
 - I bersagli nemici distruttibili (unità, strutture e feature) vengono evidenziati con parentesi angolari rosse
 - Icona dell'app macOS aggiornata col logo Warzone 2100 Reforged
 - Overlay scuro semitrasparente dietro i pulsanti del menu principale, per migliorare la leggibilità dei testi sopra lo sfondo
-- Interfaccia di gioco (HUD) rimasterizzata: pulsanti del reticolo comandi, cornici, schede, barre di avanzamento e icone (costruzione, progetta, fabbrica, ricerca, mappa intel, annulla)
+- Interfaccia di gioco (HUD) rimasterizzata in stile «vetro» verde (accento fazione Project): reticolo comandi (con stati normale/attivo/disabilitato/hover coerenti), barra energia, cornici finestra, schede, pulsante chiudi e slot dei menu costruzione/fabbrica/ricerca — icone originali ridisegnate mantenendone il significato
+- Pannello ordini unità (attacca/mantieni/pattuglia/ritira…) e schermata di progettazione ricolorati nella stessa tonalità verde, preservando le icone originali e i colori semantici delle barre di confronto statistiche (blu/rosso/giallo)
 - Nuovo logo del menu principale
 
 ### Gameplay/UX

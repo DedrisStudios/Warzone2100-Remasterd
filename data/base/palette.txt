@@ -8,7 +8,7 @@ ff,0,0,ff	// health low
 0,ff,0,ff	// green
 ff,0,0,ff	// red
 ff,ff,0,ff	// yellow
-0,1,61,ff	// menu background
+06,1a,0e,ff	// menu background
 0,15,f0,ff	// menu border
 85,1,1,ff	// menu load border
 ff,ff,ff,ff	// cursor
@@ -93,7 +93,7 @@ ff,00,00,ff	// demolish beam
 98,98,98,ff	// Don't know this player.
 ff,ff,f0,ff	// Seen this player before.
 b0,b0,ff,ff	// Server knows this player.
-10,10,80,96	// Default filled GUI box colour
+0c,20,12,96	// Default filled GUI box colour
 1b,ff,5f,ff // Info messages text color
 10,10,80,bb	// Default notification box colour
 b0,8f,5f,ff	// Arizona fog
