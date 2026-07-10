@@ -30,15 +30,24 @@ Dettagli che mordono:
 
 Su questo repo i messaggi di commit non devono contenere `Claude`, `Anthropic`, né trailer `Co-Authored-By`. Push delle feature va su **`dedris`** (il fork), NON su `origin` (upstream ufficiale Warzone2100).
 
-## 5. Keybinding: i default non bastano, c'è `keymap.json`
+## 5. Changelog: OGNI modifica va registrata in `CHANGELOG.md`
+
+Nella root del repo c'è `CHANGELOG.md`: va tenuto aggiornato con **tutte** le modifiche fatte, nessuna esclusa. Regole:
+
+- **Aggiorna il changelog nello stesso commit della modifica** (o comunque prima del push): un push senza la voce corrispondente nel changelog è un errore.
+- Voce sotto la data odierna (`## AAAA-MM-GG`, data più recente in alto), nella categoria giusta: **Grafica**, **Gameplay/UX**, **Controlli**, **Traduzione**, **Build/Web**, **Documentazione**.
+- In italiano, una riga per modifica, descrivendo l'effetto per il giocatore/utente (non il dettaglio implementativo). Come per i commit (§4): niente riferimenti a Claude/Anthropic.
+- Vanno registrate anche le modifiche solo locali non versionabili (es. asset del submodule texpages), marcate con `(locale, non nel repo)`.
+
+## 6. Keybinding: i default non bastano, c'è `keymap.json`
 
 I default dei tasti sono in `src/input/keyconfig.cpp`. A runtime vengono sovrascritti da `~/Library/Application Support/Warzone 2100 <ver>/keymap.json`. Dopo aver cambiato un default, il vecchio `keymap.json` continua a vincere → la modifica non si vede. Rimedio: rigenerare `keymap.json` (rimuoverlo se non ci sono rebind utente `source:"user"`) o farlo resettare dal menu Opzioni.
 
-## 6. Cartella utente dipende dalla versione della build
+## 7. Cartella utente dipende dalla versione della build
 
 La pref dir è `~/Library/Application Support/Warzone 2100 <versione>`. La build `wzbuild` riporta versione `master` → usa **"Warzone 2100 master"**. Metti lì `config` (`language=it`), `keymap.json` e `sequences.wz` (video campagna, download separato ~964MB). Attenzione a non confonderla con "Warzone 2100 main" di build precedenti.
 
-## 7. Asset 3D e ammodernamento texture (progetto "remaster HD")
+## 8. Asset 3D e ammodernamento texture (progetto "remaster HD")
 
 Mappa di dove vivono gli asset 3D e cosa conviene toccare con l'AI. **Regola d'oro: si ammodernano le TEXTURE, non la geometria.**
 
