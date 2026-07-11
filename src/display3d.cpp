@@ -1102,7 +1102,7 @@ void draw3DScene()
 	}
 	if (showUNITCOUNT && selectedPlayer < MAX_PLAYERS)
 	{
-		std::string killdiff = astringf("LOST %u   BUILT %u   KILLED %u", missionData.unitsLost, missionData.unitsBuilt, getSelectedPlayerUnitsKilled());
+		std::string killdiff = astringf("PERSE %u   COSTRUITE %u   UCCISE %u", missionData.unitsLost, missionData.unitsBuilt, getSelectedPlayerUnitsKilled());
 		txtUnits.setText(WzString::fromUtf8(killdiff), font_small);
 		const unsigned width = txtUnits.width() + 10;
 		const unsigned height = 9; //txtUnits.height();

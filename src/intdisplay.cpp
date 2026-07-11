@@ -23,6 +23,8 @@
  * Callback and display functions for interface.
  *
  */
+#include <algorithm>
+#include <cmath>
 #include "lib/framework/frame.h"
 #include "lib/framework/math_ext.h"
 #include "lib/framework/object_list_iteration.h"
@@ -147,10 +149,13 @@ void formatTime(W_BARGRAPH *barGraph, int buildPointsDone, int buildPointsTotal,
 
 static void formatPowerText(W_BARGRAPH *barGraph, int neededPower)
 {
-	char powerText[20];
-	ssprintf(powerText, "%d", neededPower);
-	barGraph->text = powerText;
-	barGraph->textCol = WZCOL_POWERQUEUE_BARTEXT;
+	// DedrisReforged: while a build/production/research is waiting for power, show a clear
+	// "not enough power" message instead of the raw power-required number (which read
+	// as a confusing counter). The bar still fills as power accumulates toward the cost.
+	(void)neededPower;
+	// Translatable; the '\n' keeps it on two lines so it fits inside the narrow bar rectangle.
+	barGraph->text = _("Not enough\npower");
+	barGraph->textCol = pal_RGBA(224, 162, 58, 255); // amber warning
 }
 
 void formatPower(W_BARGRAPH *barGraph, int neededPower, int powerToBuild)
@@ -174,137 +179,152 @@ std::string PowerBar::getTip()
 }
 
 // !!!!!!!!!!!!!!!!!!!!!!ONLY WORKS ON A SIDEWAYS POWERBAR!!!!!!!!!!!!!!!!!
+// DedrisReforged — even-odd scanline fill of a small polygon (green zone / presentation).
+// Lets us draw a crisp filled icon (the energy bolt) without authoring a new atlas sprite.
+static void drawFilledPolyRows(const float *px, const float *py, int n, PIELIGHT col)
+{
+	float minY = py[0], maxY = py[0];
+	for (int i = 1; i < n; ++i) { minY = std::min(minY, py[i]); maxY = std::max(maxY, py[i]); }
+	const int yStart = (int)floor(minY);
+	const int yEnd = (int)ceil(maxY);
+	for (int y = yStart; y < yEnd; ++y)
+	{
+		const float yc = (float)y + 0.5f;
+		float xs[8];
+		int m = 0;
+		for (int i = 0; i < n && m < 8; ++i)
+		{
+			const float ay = py[i];
+			const float by = py[(i + 1) % n];
+			if ((ay <= yc && by > yc) || (by <= yc && ay > yc))
+			{
+				const float ax = px[i];
+				const float bx = px[(i + 1) % n];
+				xs[m++] = ax + (yc - ay) / (by - ay) * (bx - ax);
+			}
+		}
+		std::sort(xs, xs + m);
+		for (int i = 0; i + 1 < m; i += 2)
+		{
+			pie_UniTransBoxFill(xs[i], (float)y, xs[i + 1], (float)(y + 1), col);
+		}
+	}
+}
+
+// A lightning bolt filled into box (bx,by,bw,bh) — the "this is energy" glyph.
+static void drawEnergyBolt(float bx, float by, float bw, float bh, PIELIGHT col)
+{
+	const float ux[6] = {0.58f, 0.08f, 0.42f, 0.30f, 0.92f, 0.54f};
+	const float uy[6] = {0.00f, 0.58f, 0.58f, 1.00f, 0.42f, 0.42f};
+	float px[6], py[6];
+	for (int i = 0; i < 6; ++i) { px[i] = bx + ux[i] * bw; py[i] = by + uy[i] * bh; }
+	drawFilledPolyRows(px, py, 6, col);
+}
+
+// DedrisReforged — resource chip. The single WZ resource is Power ("Energia"): energy
+// burned from oil derricks. Drawn top-right as a compact modern chip: bolt icon +
+// label + big number + a slim jade reserve bar. Sober Project-green palette (no neon).
 void PowerBar::display(int xOffset, int yOffset)
 {
-	SDWORD		Avail, ManPow, realPower;
-	SDWORD		Empty;
-	SDWORD		BarWidth, textWidth = 0;
-	SDWORD		iX, iY;
-
-	double desiredPower = getPowerMinusQueued(selectedPlayer);
-	static double displayPower;
-	static unsigned lastRealTime;
-	displayPower = desiredPower + (displayPower - desiredPower) * exp((realTime - lastRealTime) / -80.); // If realTime < lastRealTime, then exp() returns 0 due to unsigned overflow.
-	lastRealTime = realTime;
-
-	ManPow = ManuPower / POWERBAR_SCALE;
-	Avail = static_cast<SDWORD>((displayPower + 1e-8) / POWERBAR_SCALE);
-	realPower = static_cast<SDWORD>((displayPower + 1e-8) - ManuPower);
-	ManuPower = 0;
-
-	BarWidth = this->width();
-
-	cache.wzText.setText(WzString::number(realPower), font_regular);
-
-	textWidth = cache.wzText.width();
-	BarWidth -= textWidth;
-
-	if (ManPow > Avail)
-	{
-		Empty = BarWidth - ManPow;
-	}
-	else
-	{
-		Empty = BarWidth - Avail;
-	}
-
-	if (Avail > BarWidth)
-	{
-		ManPow = PERNUM(BarWidth, ManPow, Avail);
-		Avail = BarWidth;
-		Empty = 0;
-	}
-
-	if (ManPow > BarWidth)
-	{
-		ManPow = BarWidth;
-		Avail = 0;
-		Empty = 0;
-	}
-
-	int x0 = xOffset + this->x();
-	int y0 = yOffset + this->y();
-
 	pie_SetFogStatus(false);
 
-	iX = x0 + 3;
-	iY = y0 + 10;
+	const int x0 = xOffset + x();
+	const int y0 = yOffset + y();
+	const int x1 = x0 + width();
+	const int y1 = y0 + height();
 
-	// DedrisRemastered (OVERWATCH-C2 HUD): the power gauge is the HUD's hero instrument,
-	// drawn procedurally as a modern tactical bar — a dark near-black track, a cyan-green
-	// gradient power fill with a bright pulsing leading-edge head, an amber "queued" /
-	// red "deficit" marker, and 25% scale ticks. Replaces the old sprite-based bar.
-	(void)Empty; // width-clamp side-output; track background now covers the empty region
-	const int bx1 = x0 + this->width();
-	const int by1 = y0 + this->height();
-	const int tby0 = y0 + 1;
-	const int tby1 = by1 - 1;
-
-	pie_UniTransBoxFill(x0, y0, bx1, by1, pal_RGBA(12, 15, 14, 235));   // dark track slab
-	iV_Box(x0, y0, bx1 - 1, by1 - 1, pal_RGBA(30, 38, 35, 255));       // subtle border
-
-	const int fillLeft = x0 + 2 + textWidth; // fill begins after the left numeric readout
-	int fx = fillLeft;
-
-	if (ManPow > 0) // manufacturing-required / deficit marker
+	if (selectedPlayer >= MAX_PLAYERS)
 	{
-		const PIELIGHT reqCol = (ManPow > Avail) ? pal_RGBA(255, 68, 54, 255) : pal_RGBA(255, 176, 32, 255);
-		pie_UniTransBoxFill(fx, tby0, fx + ManPow, tby1, reqCol);
-		fx += ManPow;
+		return;
 	}
 
-	const int availEnd = std::min(bx1 - 2, fillLeft + Avail); // available power, clamped inside the track
-	if (availEnd > fx)
-	{
-		const int bands = 12; // few bands = smooth gradient at a modest draw-call cost (WebGL2/iPad)
-		const int span = availEnd - fx;
-		for (int b = 0; b < bands; ++b)
-		{
-			const int sx = fx + span * b / bands;
-			const int ex = fx + span * (b + 1) / bands;
-			if (ex <= sx) { continue; }
-			const double t = std::min(1.0, (double)(sx - fillLeft) / (double)std::max(1, BarWidth));
-			pie_UniTransBoxFill(sx, tby0, ex, tby1,
-			                    pal_RGBA((int)(14 + 33 * t), (int)(61 + 163 * t), (int)(42 + 158 * t), 255));
-		}
-		const int pulse = std::min(255, 205 + (int)(50 * sin(realTime / 140.0))); // pulsing head crest
-		pie_UniTransBoxFill(std::max(fillLeft, availEnd - 2), tby0, availEnd + 1, tby1, pal_RGBA(124, 255, 232, pulse));
-	}
+	// Smoothed reserve so the readout stays calm while power fluctuates.
+	const double target = (double)getPower(selectedPlayer);
+	static double displayPower = target;
+	static unsigned lastRealTime = realTime;
+	displayPower = target + (displayPower - target) * exp((double)(realTime - lastRealTime) / -160.0);
+	lastRealTime = realTime;
 
-	for (int k = 1; k < 4; ++k) // 25% scale ticks
-	{
-		const int tx = fillLeft + BarWidth * k / 4;
-		pie_UniTransBoxFill(tx, tby0, tx + 1, tby1, pal_RGBA(0, 0, 0, 90));
-	}
+	const int powerNow = (int)(displayPower + (displayPower >= 0 ? 0.5 : -0.5));
+	const bool deficit = powerNow < 0;
 
-	auto unusedDerricks = countPlayerUnusedDerricks(gameWorld.objects);
+	// Sober jade palette.
+	const PIELIGHT slab    = pal_RGBA(14, 19, 17, 236);
+	const PIELIGHT border  = pal_RGBA(38, 48, 43, 255);
+	const PIELIGHT railCol = pal_RGBA(78, 158, 123, 255);
+	const PIELIGHT jade    = pal_RGBA(95, 196, 149, 255);
+	const PIELIGHT labelC  = pal_RGBA(138, 168, 154, 255);
+	const PIELIGHT valueC  = deficit ? pal_RGBA(224, 83, 63, 255) : pal_RGBA(220, 237, 228, 255);
+	const PIELIGHT redC    = pal_RGBA(224, 83, 63, 255);
 
-	auto showNeedMessage = true;
-	if (unusedDerricks > 0)
+	// Slab body + left accent rail + hairline border.
+	pie_UniTransBoxFill(x0, y0, x1, y1, slab);
+	pie_UniTransBoxFill(x0, y0, x0 + 3, y1, railCol);
+	iV_Box(x0, y0, x1 - 1, y1 - 1, border);
+
+	// Energy bolt icon.
+	const float boltH = (float)(y1 - y0) * 0.46f;
+	const float boltW = boltH * 0.66f;
+	const float boltX = (float)(x0 + 12);
+	const float boltY = (float)y0 + ((float)(y1 - y0) - boltH) * 0.5f - 2.0f;
+	drawEnergyBolt(boltX, boltY, boltW, boltH, deficit ? redC : jade);
+
+	const int tx = x0 + 42;
+
+	// Label (Italian-first fork).
+	cache.wzLabel.setText("ENERGIA", font_small);
+	cache.wzLabel.render(tx, y0 + 16, labelC);
+
+	// Big value.
+	cache.wzText.setText(WzString::number(powerNow), font_large);
+	cache.wzText.render(tx, y0 + 38, valueC);
+
+	// Income (right-aligned, small) or a "LOW" warning on deficit.
+	WzString rightText;
+	PIELIGHT rightCol = labelC;
+	if (deficit)
 	{
-		char unusedText[50];
-		ssprintf(unusedText, _("%u derrick(s) inactive"), static_cast<unsigned>(unusedDerricks));
-		cache.wzNeedText.setText(unusedText, font_small);
-	}
-	else if (Avail < 0)
-	{
-		cache.wzNeedText.setText(_("Need more resources!"), font_small);
+		rightText = "!";
+		rightCol = redC;
 	}
 	else
 	{
-		showNeedMessage = false;
+		rightText = WzString::fromUtf8(getApproxPowerGeneratedPerSecForDisplay(selectedPlayer));
 	}
-
-	if (showNeedMessage)
+	cache.wzIncome.setText(rightText, font_small);
+	const int rightW = cache.wzIncome.width();
+	if (rightW < width() - 52)
 	{
-		auto needTextWidth = cache.wzNeedText.width();
-		auto textX = iX + (this->width() - needTextWidth) / 2;
-		pie_UniTransBoxFill(textX - 3, y0 + 1, textX + needTextWidth + 3, y0 + this->height() - 1, WZCOL_TRANSPARENT_BOX);
-		cache.wzNeedText.render(textX, iY - 1, (realTime / 1250) % 5 ? WZCOL_WHITE: WZCOL_RED);
+		cache.wzIncome.render(x1 - 10 - rightW, y0 + 38, rightCol);
 	}
 
-	// draw text value
-	cache.wzText.render(iX, iY, Avail < 0 ? WZCOL_RED : WZCOL_TEXT_BRIGHT);
+	// Slim reserve level bar (adaptive scale so it always reads meaningfully).
+	static double powMax = 1000.0;
+	powMax = std::max(1000.0, std::max(powMax * 0.9995, (double)(powerNow > 0 ? powerNow : 0)));
+	const double frac = deficit ? 0.0 : std::min(1.0, (double)powerNow / powMax);
+	const int barL = tx;
+	const int barR = x1 - 10;
+	const int barY0 = y1 - 8;
+	const int barY1 = y1 - 5;
+	pie_UniTransBoxFill(barL, barY0, barR, barY1, pal_RGBA(10, 15, 13, 255)); // track
+	const int fillW = (int)((barR - barL) * frac);
+	if (fillW > 0)
+	{
+		const int bands = 10;
+		for (int b = 0; b < bands; ++b)
+		{
+			const int sx = barL + fillW * b / bands;
+			const int ex = barL + fillW * (b + 1) / bands;
+			if (ex <= sx) { continue; }
+			const double t = (double)b / (double)(bands - 1);
+			pie_UniTransBoxFill(sx, barY0, ex, barY1,
+			                    pal_RGBA((int)(28 + 59 * t), (int)(77 + 122 * t), (int)(56 + 91 * t), 255));
+		}
+	}
+	else if (deficit)
+	{
+		pie_UniTransBoxFill(barL, barY0, barR, barY1, pal_RGBA(80, 20, 16, 255));
+	}
 }
 
 IntFancyButton::IntFancyButton()
@@ -370,8 +390,8 @@ void IntFancyButton::displayIfHighlight(int xOffset, int yOffset)
 		const int by0 = yOffset + y();
 		const int bx1 = bx0 + width();
 		const int by1 = by0 + height();
-		iV_Box(bx0, by0, bx1 - 1, by1 - 1, pal_RGBA(51, 255, 158, 130));
-		pie_UniTransBoxFill(bx0 + 1, by1 - 3, bx1 - 1, by1, pal_RGBA(51, 255, 158, 255));
+		iV_Box(bx0, by0, bx1 - 1, by1 - 1, pal_RGBA(95, 196, 149, 120));
+		pie_UniTransBoxFill(bx0 + 1, by1 - 3, bx1 - 1, by1, pal_RGBA(95, 196, 149, 255));
 	}
 }
 
@@ -763,8 +783,8 @@ void IntFormAnimated::display(int xOffset, int yOffset)
 		const int ly1 = aCur.y() + aCur.height();
 		if (aCur.width() > 24 && aCur.height() > 16)
 		{
-			const PIELIGHT rail = pal_RGBA(51, 255, 158, 255);
-			pie_UniTransBoxFill(lx0, ly1 - 3, lx1, ly1, rail);        // bottom accent rail
+			const PIELIGHT rail = pal_RGBA(78, 158, 123, 255);        // muted jade accent (sober)
+			pie_UniTransBoxFill(lx0, ly1 - 2, lx1, ly1, rail);        // bottom accent rail
 			const int bl = 12;                                        // bracket leg length
 			iV_Line(lx0, ly0, lx0 + bl, ly0, rail);                   // top-left bracket
 			iV_Line(lx0, ly0, lx0, ly0 + bl, rail);

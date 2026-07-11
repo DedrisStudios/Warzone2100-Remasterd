@@ -73,6 +73,7 @@ public:
 //private:
 	PIELIGHT backgroundColour;
 	WzText	 wzCachedText;
+	WzText	 wzCachedText2;                         // Second line, when text is split on '\n'.
 
 	bool sizesDirty = false;
 

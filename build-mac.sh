@@ -48,8 +48,15 @@ if [ ! -f "$BUILD/build.ninja" ]; then
   if [ -n "$SQLITE_PREFIX" ]; then
     SQLITE_ARGS=(-DSQLite3_INCLUDE_DIR="$SQLITE_PREFIX/include" -DSQLite3_LIBRARY="$SQLITE_PREFIX/lib/libsqlite3.dylib")
   fi
+  # OpenAL: openal-soft su Homebrew è keg-only → CMake non lo trova senza hint.
+  # Aggiungiamo il suo prefix a CMAKE_PREFIX_PATH così find_package(OpenAL) lo risolve.
+  OPENAL_PREFIX="$(brew --prefix openal-soft 2>/dev/null || true)"
+  PREFIX_ARGS=()
+  if [ -n "$OPENAL_PREFIX" ]; then
+    PREFIX_ARGS=(-DCMAKE_PREFIX_PATH="$OPENAL_PREFIX")
+  fi
   find "$SRC" -name '._*' -not -path '*/.git/*' -delete 2>/dev/null
-  cmake -G Ninja -S "$SRC" -B "$BUILD" -DCMAKE_BUILD_TYPE=Release "${SQLITE_ARGS[@]}" \
+  cmake -G Ninja -S "$SRC" -B "$BUILD" -DCMAKE_BUILD_TYPE=Release "${SQLITE_ARGS[@]}" "${PREFIX_ARGS[@]}" \
     || { echo "FALLITO: configure" >&2; exit 1; }
 fi
 

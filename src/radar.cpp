@@ -66,8 +66,8 @@ static void applyMinimapOverlay();
 
 bool bEnemyAllyRadarColor = false;     			/**< Enemy/ally radar color. */
 RADAR_DRAW_MODE	radarDrawMode = RADAR_MODE_DEFAULT;	/**< Current mini-map mode. */
-bool rotateRadar = true; ///< Rotate the radar?
-bool radarRotationArrow = true; ///< display arrow when radar rotation enabled?
+bool rotateRadar = false; ///< DedrisReforged: minimap fixed (north-up), never rotates with camera
+bool radarRotationArrow = false; ///< display arrow when radar rotation enabled?
 
 static PIELIGHT		colRadarAlly, colRadarMe, colRadarEnemy;
 static PIELIGHT		tileColours[MAX_TILES];
@@ -210,14 +210,15 @@ static void radarSize(int ZoomLevel)
 	float zoom = static_cast<float>(ZoomLevel) * RadarZoomMultiplier / 16.0f;
 	radarWidth = static_cast<size_t>(radarTexWidth * zoom);
 	radarHeight = static_cast<size_t>(radarTexHeight * zoom);
+	// DedrisReforged (SC2 layout): minimap moved to the BOTTOM-LEFT corner.
 	if (rotateRadar)
 	{
-		radarCenterX = pie_GetVideoBufferWidth() - BASE_GAP * 4 - static_cast<int>(MAX(radarHeight, radarWidth)) / 2;
+		radarCenterX = BASE_GAP * 4 + static_cast<int>(MAX(radarHeight, radarWidth)) / 2;
 		radarCenterY = pie_GetVideoBufferHeight() - BASE_GAP * 4 - static_cast<int>(MAX(radarWidth, radarHeight)) / 2;
 	}
 	else
 	{
-		radarCenterX = pie_GetVideoBufferWidth() - BASE_GAP * 4 - static_cast<int>(radarWidth) / 2;
+		radarCenterX = BASE_GAP * 4 + static_cast<int>(radarWidth) / 2;
 		radarCenterY = pie_GetVideoBufferHeight() - BASE_GAP * 4 - static_cast<int>(radarHeight) / 2;
 	}
 	debug(LOG_WZ, "radar=(%u,%u) tex=(%zu,%zu) size=(%zu,%zu)", radarCenterX, radarCenterY, radarTexWidth, radarTexHeight, radarWidth, radarHeight);

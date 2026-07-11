@@ -43,6 +43,7 @@ protected:
 	void initialize();
 public:
 	void display(int xOffset, int yOffset) override;
+	void run(W_CONTEXT *psContext) override; // DedrisReforged: live-refresh selection console
 	static std::shared_ptr<GroupsForum> make()
 	{
 		class make_shared_enabler: public GroupsForum {};
@@ -69,6 +70,7 @@ private:
 	std::shared_ptr<IntListTabWidget> groupsList;
 	std::shared_ptr<GroupsUIController> groupsUIController;
 	optional<WidgetHelp> help;
+	uint32_t lastSelRefreshTime = 0; // DedrisReforged: throttle selection re-scan (~10Hz)
 };
 
 #endif // __INCLUDED_SRC_HCI_GROUPS_H__

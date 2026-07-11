@@ -131,26 +131,49 @@ void W_BARGRAPH::run(W_CONTEXT *context)
 	}
 }
 
-static void barGraphDisplayText(W_BARGRAPH *barGraph, int x0, int x1, int y1)
+// Render one cached text line, centred between x0..x1 with a baseline at baseY,
+// plus a black shadow so it stays legible against any background.
+static void barGraphRenderTextLine(WzText &cachedText, PIELIGHT col, int x0, int x1, int baseY)
 {
-	if (!barGraph->text.isEmpty())
+	int textWidth = cachedText.width();
+	Vector2i pos((x0 + x1 - textWidth) / 2, baseY);
+	// Add a shadow, to make it visible against any background.
+	for (int dx = -2; dx <= 2; ++dx)
 	{
-		barGraph->wzCachedText.setText(barGraph->text, font_bar);
-		int textWidth = barGraph->wzCachedText.width();
-		Vector2i pos((x0 + x1 - textWidth) / 2, y1);
-		// Add a shadow, to make it visible against any background.
-		for (int dx = -2; dx <= 2; ++dx)
+		for (int dy = -2; dy <= 2; ++dy)
 		{
-			for (int dy = -2; dy <= 2; ++dy)
+			if (dx*dx + dy*dy <= 4)
 			{
-				if (dx*dx + dy*dy <= 4)
-				{
-					barGraph->wzCachedText.render(pos.x + dx, pos.y + dy, WZCOL_BLACK);
-				}
+				cachedText.render(pos.x + dx, pos.y + dy, WZCOL_BLACK);
 			}
 		}
-		barGraph->wzCachedText.render(pos.x, pos.y, barGraph->textCol);
 	}
+	cachedText.render(pos.x, pos.y, col);
+}
+
+static void barGraphDisplayText(W_BARGRAPH *barGraph, int x0, int x1, int y1)
+{
+	if (barGraph->text.isEmpty())
+	{
+		return;
+	}
+
+	// Support an optional two-line message (split on '\n'): a single long string
+	// (e.g. "Energia insufficiente") would otherwise overflow the narrow bar rectangle.
+	if (barGraph->text.contains(WzUniCodepoint::fromASCII('\n')))
+	{
+		std::vector<WzString> lines = barGraph->text.split("\n");
+		barGraph->wzCachedText.setText(lines[0], font_bar);
+		barGraph->wzCachedText2.setText(lines.size() > 1 ? lines[1] : WzString(), font_bar);
+		int lineSize = barGraph->wzCachedText.lineSize();
+		// Anchor the last line at the original baseline (y1) and stack the first line above it.
+		barGraphRenderTextLine(barGraph->wzCachedText, barGraph->textCol, x0, x1, y1 - lineSize);
+		barGraphRenderTextLine(barGraph->wzCachedText2, barGraph->textCol, x0, x1, y1);
+		return;
+	}
+
+	barGraph->wzCachedText.setText(barGraph->text, font_bar);
+	barGraphRenderTextLine(barGraph->wzCachedText, barGraph->textCol, x0, x1, y1);
 }
 
 /* The simple bar graph display function */

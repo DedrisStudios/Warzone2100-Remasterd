@@ -477,8 +477,11 @@ bool loadConfig()
 	{
 		war_setLODDistanceBiasPercentage(value.value());
 	}
-	rotateRadar = iniGetBool("rotateRadar", true).value();
-	radarRotationArrow = iniGetBool("radarRotationArrow", true).value();
+	// DedrisReforged: the minimap is always FIXED (north-up) and never rotates with the
+	// camera (SC2-style), regardless of any saved setting.
+	(void)iniGetBool("rotateRadar", false);
+	rotateRadar = false;
+	radarRotationArrow = false;
 	hostQuitConfirmation = iniGetBool("hostQuitConfirmation", true).value();
 	war_SetPauseOnFocusLoss(iniGetBool("PauseOnFocusLoss", false).value());
 	NETsetLobbyserverAddress(iniGetString("lobbyserver", std::string(netlobby::GetDefaultLobbyAddress())).value());

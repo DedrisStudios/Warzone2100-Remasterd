@@ -8728,6 +8728,13 @@ msgstr "Mostro Tecnologia Obsoleta"
 msgid "Cost: %u"
 msgstr "Costo: %u"
 
+#, c-format
+msgid "Buildable with current power: %d"
+msgstr "Costruibili con l'energia attuale: %d"
+
+msgid "Not enough\npower"
+msgstr "Energia\ninsufficiente"
+
 msgid "Build Progress"
 msgstr "Progresso della produzione"
 

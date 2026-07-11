@@ -26,6 +26,7 @@
 #include "../mission.h"
 #include "../qtscript.h"
 #include "../display3d.h"
+#include "../power.h"
 
 STRUCTURE *ManufactureController::highlightedFactory = nullptr;
 static const uint8_t nullBrainComponent = 0; // "0" to reference "NULLxxx" components
@@ -522,6 +523,23 @@ protected:
 
 		displayIMD(AtlasImage(), ImdObject::DroidTemplate(stat), xOffset, yOffset);
 		displayIfHighlight(xOffset, yOffset);
+	}
+
+	// DedrisReforged: extend the buildable-option tooltip (name + "Cost: X") with how many
+	// of this unit the player's CURRENT power could pay for, so production can be gauged
+	// against available energy without doing the math by hand.
+	std::string getTip() override
+	{
+		WzString tip = WzString::fromUtf8(BaseWidget::getTip());
+		uint32_t cost = getCost();
+		if (cost > 0 && selectedPlayer < MAX_PLAYERS)
+		{
+			int affordable = getPower(selectedPlayer) / static_cast<int>(cost);
+			if (affordable < 0) { affordable = 0; }
+			tip.append("\n");
+			tip.append(WzString::format(_("Buildable with current power: %d"), affordable));
+		}
+		return tip.toUtf8();
 	}
 
 private:

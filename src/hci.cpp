@@ -303,7 +303,7 @@ private:
 
 private:
 	int marginX = 16;
-	int marginTop = 18;
+	int marginTop = 26;
 };
 
 /***************************GAME CODE ****************************/
@@ -2375,7 +2375,10 @@ bool intAddReticule()
 	parent->attach(retForm);
 	retForm->id = IDRET_FORM;
 	retForm->setCalcLayout(LAMBDA_CALCLAYOUT_SIMPLE({
-		psWidget->setGeometry(RET_X, RET_Y, RET_FORMWIDTH, RET_FORMHEIGHT);
+		// DedrisReforged (SC2 layout): reticule moved to the TOP-RIGHT, under the energia
+		// chip — the bottom-left corner it used to occupy now holds the minimap. Only the
+		// widget geometry moves; RET_X/RET_Y stay as the anchor for the object/design/etc.
+		psWidget->setGeometry(pie_GetVideoBufferWidth() - RET_FORMWIDTH - 12, 72, RET_FORMWIDTH, RET_FORMHEIGHT);
 	}));
 	for (int i = 0; i < NUMRETBUTS; i++)
 	{
@@ -2450,8 +2453,15 @@ bool intAddPower()
 	sBarInit.iRange = POWERBAR_SCALE;
 
 	auto psBarGraph = std::make_shared<PowerBar>(&sBarInit);
+	// DedrisReforged: the resource (Energia) chip lives TOP-RIGHT now (modern RTS layout),
+	// not as the old bottom horizontal bar. Anchored to the right edge of the screen.
 	psBarGraph->setCalcLayout(LAMBDA_CALCLAYOUT_SIMPLE({
-		psWidget->setGeometry((SWORD)POW_X, (SWORD)POW_Y, POW_BARWIDTH, iV_GetImageHeight(IntImages, IMAGE_PBAR_EMPTY));
+		const int chipW = 228;
+		const int chipH = 52;
+		const int topMargin = 22;
+		// Leave room on the right for the top-right options gear (38px wide @ 16px margin).
+		const int rightReserve = 62;
+		psWidget->setGeometry((SWORD)(pie_GetVideoBufferWidth() - chipW - rightReserve), (SWORD)topMargin, chipW, chipH);
 	}));
 
 	ASSERT_NOT_NULLPTR_OR_RETURN(false, psWScreen);

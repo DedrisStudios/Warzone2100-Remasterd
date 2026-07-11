@@ -2,6 +2,19 @@
 
 Tutte le modifiche del progetto, dalla più recente. Le regole di aggiornamento sono in [AGENTS.md](AGENTS.md) §5.
 
+## 2026-07-11
+
+### Grafica
+- HUD: barra dell'energia abbassata di 10 px per un migliore allineamento in alto a destra
+- HUD: pulsante impostazioni (gear) in alto a destra abbassato di qualche px per allinearlo alla barra dell'energia
+- HUD: il messaggio «Energia insufficiente» sulle barre di produzione/costruzione/ricerca va ora su due righe, così non sborda più dal rettangolo
+
+### Gameplay/UX
+- Fabbrica: passando il mouse su un'unità costruibile, il suggerimento mostra ora quante se ne possono costruire con l'energia attuale (oltre al costo)
+
+### Traduzione
+- I nuovi testi «Energia insufficiente» (barre di produzione) e «Costruibili con l'energia attuale» (fabbrica) passano ora dal sistema di traduzione: italiano dal file `.po`, inglese come ripiego per le altre lingue
+
 ## 2026-07-10
 
 ### Grafica

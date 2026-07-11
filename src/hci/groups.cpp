@@ -22,6 +22,14 @@
 #include "objects_stats.h"
 #include "../group.h"
 #include "../game_world.h"
+// DedrisReforged: repurposed into an SC2-style selected-units console.
+#include "../selection.h"
+#include "../droid.h"
+#include "../display.h"
+#include "../display3d.h"
+#include "../map.h"
+#include "lib/ivis_opengl/piepalette.h"
+#include "lib/ivis_opengl/pieblitfunc.h"
 
 static bool groupButtonEnabled = true;
 
@@ -45,6 +53,11 @@ public:
 		size_t numberCommandedByGroup = 0; // the number of droids commanded by commanders in this group
 		uint64_t totalGroupMaxHealth = 0;
 		DROID_TEMPLATE displayDroidTemplate;
+
+		// DedrisReforged (SC2 selection console): per selection-stack data.
+		uint64_t totalCurrentBody = 0;          // sum of current body of units in this stack
+		std::vector<uint32_t> componentKey;     // type signature (buildComponentsFromDroid) for sub-select
+		uint32_t repDroidId = 0;                // representative unit (for centre-camera)
 
 		uint8_t currAttackGlowAlpha = 0;
 
@@ -99,8 +112,49 @@ public:
 		assignObjectToGroup(selectedPlayer, groupNumber, true);
 	}
 
+	// DedrisReforged (SC2 selection console): number of populated selection stacks.
+	size_t activeStacks() const { return numActiveStacks; }
+
+	// Narrow the current selection down to just the units of the clicked stack's type.
+	void subSelectStack(size_t slot)
+	{
+		if (slot >= numActiveStacks || selectedPlayer >= MAX_PLAYERS) { return; }
+		const std::vector<uint32_t> key = groupInfo[slot].componentKey;
+		std::vector<DROID*> keep;
+		for (DROID* psDroid : gameWorld.objects.droids[selectedPlayer])
+		{
+			if (psDroid->selected && buildComponentsFromDroid(psDroid) == key)
+			{
+				keep.push_back(psDroid);
+			}
+		}
+		if (keep.empty()) { return; }
+		clearSelection();
+		for (DROID* psDroid : keep)
+		{
+			SelectDroid(psDroid, true /* programmatic: no script-event spam */);
+		}
+	}
+
+	// Centre the camera on the clicked stack's representative unit.
+	void centerOnStack(size_t slot)
+	{
+		if (slot >= numActiveStacks || selectedPlayer >= MAX_PLAYERS) { return; }
+		const uint32_t id = groupInfo[slot].repDroidId;
+		for (DROID* psDroid : gameWorld.objects.droids[selectedPlayer])
+		{
+			if (psDroid->id == id)
+			{
+				Vector2i t = map_coord(Vector2i(psDroid->pos.x, psDroid->pos.y));
+				setViewPos(t.x, t.y, true);
+				return;
+			}
+		}
+	}
+
 private:
 	std::array<GroupDisplayInfo, 10> groupInfo;
+	size_t numActiveStacks = 0;
 };
 
 class GroupButton : public DynamicIntFancyButton
@@ -108,151 +162,96 @@ class GroupButton : public DynamicIntFancyButton
 private:
 	typedef DynamicIntFancyButton BaseWidget;
 	std::shared_ptr<GroupsUIController> controller;
-	std::shared_ptr<W_LABEL> groupNumberLabel;
 	std::shared_ptr<W_LABEL> groupCountLabel;
-	std::shared_ptr<W_LABEL> groupDamagedCountLabel;
-	size_t groupNumber;
-	uint32_t lastUpdatedGlowAlphaTime = 0;
+	size_t slot;
 protected:
 	GroupButton() : DynamicIntFancyButton() { }
 public:
-	static std::shared_ptr<GroupButton> make(const std::shared_ptr<GroupsUIController>& controller, size_t groupNumber)
+	static std::shared_ptr<GroupButton> make(const std::shared_ptr<GroupsUIController>& controller, size_t slot)
 	{
 		class make_shared_enabler: public GroupButton {};
 		auto widget = std::make_shared<make_shared_enabler>();
 		widget->controller = controller;
-		widget->groupNumber = groupNumber;
+		widget->slot = slot;
 		widget->initialize();
 		return widget;
 	}
 
 	void initialize()
 	{
-		attach(groupNumberLabel = std::make_shared<W_LABEL>());
-		groupNumberLabel->setGeometry(OBJ_TEXTX, OBJ_B1TEXTY - 5, 16, 16);
-		groupNumberLabel->setString(WzString::format("%zu", groupNumber));
-		groupNumberLabel->setTransparentToMouse(true);
-
+		// DedrisReforged: SC2-style selected-units cell — count of units of this type,
+		// bright, top-right of the cell.
 		attach(groupCountLabel = std::make_shared<W_LABEL>());
 		groupCountLabel->setGeometry(OBJ_TEXTX + 40, OBJ_B1TEXTY + 20, 16, 16);
+		groupCountLabel->setFontColour(pal_RGBA(220, 237, 228, 255));
 		groupCountLabel->setString("");
 		groupCountLabel->setTransparentToMouse(true);
 
-		attach(groupDamagedCountLabel = std::make_shared<W_LABEL>());
-		groupDamagedCountLabel->setGeometry(0, 0, 16, 16);
-		groupDamagedCountLabel->setFontColour(pal_RGBA(255, 0, 0, 255) /* red */);
-		groupDamagedCountLabel->setString("");
-		groupDamagedCountLabel->setTransparentToMouse(true);
-
 		buttonBackgroundEmpty = true;
 
-		const std::string groupNumberStr = std::to_string(groupNumber);
-		setTip(_("Select / Assign Group Number: ") + groupNumberStr);
+		setTip("Seleziona solo queste unità (tasto destro o tieni premuto: centra la vista)");
 
-		auto helpInfo = WidgetHelp()
-		  .setTitle(WzString::format(_("Group %zu"), groupNumber))
-		  .addInteraction({WidgetHelp::InteractionTriggers::PrimaryClick}, WzString::format(_("Select the Units in Group %zu"), groupNumber))
-		  .addInteraction({WidgetHelp::InteractionTriggers::SecondaryClick, WidgetHelp::InteractionTriggers::ClickAndHold}, WzString::format(_("Assign Selected Units to Group %zu"), groupNumber))
-		  .addInteraction({WidgetHelp::InteractionTriggers::Misc},  _("Center Camera on this Group by clicking or tapping twice"))
-		  .addRelatedKeybinding("SelectGrouping_" + groupNumberStr)
-		  .addRelatedKeybinding("AssignGrouping_" + groupNumberStr)
-		  .addRelatedKeybinding("AddGrouping_" + groupNumberStr);
-
-		setHelp(helpInfo);
+		setHelp(WidgetHelp()
+		  .setTitle(WzString::fromUtf8("Unità selezionate"))
+		  .addInteraction({WidgetHelp::InteractionTriggers::PrimaryClick}, WzString::fromUtf8("Seleziona solo le unità di questo tipo"))
+		  .addInteraction({WidgetHelp::InteractionTriggers::SecondaryClick, WidgetHelp::InteractionTriggers::ClickAndHold}, WzString::fromUtf8("Centra la telecamera su queste unità")));
 	}
 
 	void clickPrimary() override
 	{
-		controller->selectGroup(groupNumber);
+		controller->subSelectStack(slot);
 	}
 
 	void clickSecondary(bool synthesizedFromHold) override
 	{
-		controller->assignSelectedDroidsToGroup(groupNumber);
+		controller->centerOnStack(slot);
 	}
 
 protected:
 	void display(int xOffset, int yOffset) override
 	{
-		auto groupInfo = controller->getGroupInfoAt(groupNumber);
-		if (!groupInfo)
-		{
-			return;
-		}
-
-		if (groupInfo->lastAccumulatedDamage > 0)
-		{
-			groupInfo->currAttackGlowAlpha = std::max<uint8_t>(groupInfo->currAttackGlowAlpha, accumulatedDamageToTargetGlowAlpha(groupInfo->lastAccumulatedDamage, groupInfo->totalGroupMaxHealth, groupInfo->lastUnitsKilled));
-			lastUpdatedGlowAlphaTime = realTime;
-			// reset consumed values
-			groupInfo->lastAccumulatedDamage = 0;
-			groupInfo->lastUnitsKilled = 0;
-		}
-		else if (groupInfo->currAttackGlowAlpha > 0 && (realTime - lastUpdatedGlowAlphaTime) > 100)
-		{
-			auto fadeAmount = 50 * (realTime - lastUpdatedGlowAlphaTime) / GAME_TICKS_PER_SEC;
-			if (fadeAmount > static_cast<int32_t>(groupInfo->currAttackGlowAlpha))
-			{
-				groupInfo->currAttackGlowAlpha = 0;
-			}
-			else
-			{
-				groupInfo->currAttackGlowAlpha -= static_cast<uint8_t>(fadeAmount);
-			}
-			lastUpdatedGlowAlphaTime = realTime;
-		}
-
-		if (!groupInfo->numberInGroup && !groupInfo->numberDamagedInGroup)
+		auto groupInfo = controller->getGroupInfoAt(slot);
+		if (!groupInfo || slot >= controller->activeStacks() || groupInfo->numberInGroup == 0)
 		{
 			groupCountLabel->setString("");
 			displayBlank(xOffset, yOffset, false);
+			return;
 		}
-		else
+
+		// 3D portrait of the representative unit of this selection stack.
+		displayIMD(AtlasImage(), ImdObject::DroidTemplate(&(groupInfo->displayDroidTemplate)), xOffset, yOffset);
+
+		// Count of units of this type in the current selection, top-right.
+		groupCountLabel->setString(WzString::format("%zu", groupInfo->numberInGroup));
+		int32_t xNumberOffset = 0;
+		const uint32_t xFitNumberInTheBox = 16;
+		if (groupCountLabel->getMaxLineWidth() > xFitNumberInTheBox)
 		{
-			displayIMD(AtlasImage(), ImdObject::DroidTemplate(&(groupInfo->displayDroidTemplate)), xOffset, yOffset);
-			groupCountLabel->setString(WzString::format("%zu", groupInfo->numberInGroup));
-			int32_t xNumberOffset = 0;
-			const uint32_t xFitNumberInTheBox = 16;
-			if (groupCountLabel->getMaxLineWidth() > xFitNumberInTheBox)
+			xNumberOffset -= groupCountLabel->getMaxLineWidth() - xFitNumberInTheBox;
+		}
+		groupCountLabel->move(OBJ_TEXTX + 40 + xNumberOffset, groupCountLabel->y());
+
+		// Health bar along the bottom of the cell, coloured by aggregate body %.
+		if (groupInfo->totalGroupMaxHealth > 0)
+		{
+			const int pct = static_cast<int>((groupInfo->totalCurrentBody * 100) / groupInfo->totalGroupMaxHealth);
+			const int clamped = std::max(0, std::min(100, pct));
+			const int bx0 = xOffset + x() + 3;
+			const int bx1 = xOffset + x() + width() - 3;
+			const int by1 = yOffset + y() + height() - 3;
+			const int by0 = by1 - 3;
+			pie_UniTransBoxFill(bx0, by0, bx1, by1, pal_RGBA(10, 15, 13, 220));
+			const int fillW = ((bx1 - bx0) * clamped) / 100;
+			const PIELIGHT hpCol = (pct > REPAIRLEV_HIGH) ? WZCOL_HEALTH_HIGH : ((pct > REPAIRLEV_LOW) ? WZCOL_HEALTH_MEDIUM : WZCOL_HEALTH_LOW);
+			if (fillW > 0)
 			{
-				xNumberOffset -= groupCountLabel->getMaxLineWidth() - xFitNumberInTheBox;
+				pie_UniTransBoxFill(bx0, by0, bx0 + fillW, by1, hpCol);
 			}
-			groupCountLabel->move(
-				OBJ_TEXTX + 40 + xNumberOffset - groupDamagedCountLabel->getMaxLineWidth(),
-				groupCountLabel->y()
-			);
-		}
-
-		if (!groupInfo->numberDamagedInGroup)
-		{
-			groupDamagedCountLabel->setString("");
-		}
-		else
-		{
-			groupDamagedCountLabel->setString(WzString::format("+%zu", groupInfo->numberDamagedInGroup));
-			groupDamagedCountLabel->move(groupCountLabel->x() + groupCountLabel->getMaxLineWidth(), groupCountLabel->y());
-		}
-
-		if (groupInfo->currAttackGlowAlpha > 0)
-		{
-			// Based on damage, display an inner glow (animated)
-			iV_DrawImageTint(IntImages, IMAGE_BUT_INNER_GLOW, xOffset + x(), yOffset + y(), pal_RGBA(170, 0, 0, groupInfo->currAttackGlowAlpha));
 		}
 	}
 	bool isHighlighted() const override
 	{
 		return false;
-	}
-private:
-	#define MAX_DAMAGE_GLOW_ALPHA 100
-	inline uint8_t accumulatedDamageToTargetGlowAlpha(uint64_t accumulatedDamage, uint64_t totalGroupMaxHealth, uint64_t unitsKilled)
-	{
-		uint64_t damageVisualPercent = (totalGroupMaxHealth > 0) ? ((accumulatedDamage * 100) / totalGroupMaxHealth) : 0;
-		if (unitsKilled > 0)
-		{
-			damageVisualPercent = 100;
-		}
-		return static_cast<uint8_t>((std::min<uint64_t>(damageVisualPercent, 100) * MAX_DAMAGE_GLOW_ALPHA) / 100);
 	}
 };
 
@@ -260,6 +259,18 @@ void GroupsForum::display(int xOffset, int yOffset)
 {
 	// draw the background
 	BaseWidget::display(xOffset, yOffset);
+}
+
+void GroupsForum::run(W_CONTEXT *psContext)
+{
+	BaseWidget::run(psContext);
+	// DedrisReforged: keep the SC2-style selected-units console live (selection + health)
+	// at ~10Hz without an O(N) rescan every frame.
+	if (realTime - lastSelRefreshTime >= 100)
+	{
+		groupsUIController->updateData();
+		lastSelRefreshTime = realTime;
+	}
 }
 
 void GroupsForum::initialize()
@@ -272,88 +283,99 @@ void GroupsForum::initialize()
 		psWidget->setGeometry(GROUP_BACKX, GROUP_BACKY, GROUP_BACKWIDTH, GROUP_BACKHEIGHT);
 	}));
 	addTabList();
-	// create the 11 buttons for each group
-	for (size_t i = 1; i <= 10; i++)
+	// DedrisReforged: cells are selection stacks (slot 0..9), populated by updateData().
+	for (size_t slot = 0; slot < 10; slot++)
 	{
-		// check if the 10th group works
 		auto buttonHolder = std::make_shared<WIDGET>();
 		groupsList->addWidgetToLayout(buttonHolder);
-		auto groupButton = makeGroupButton(i % 10);
+		auto groupButton = makeGroupButton(slot);
 		buttonHolder->attach(groupButton);
 		groupButton->setGeometry(0, 0, OBJ_BUTWIDTH, OBJ_BUTHEIGHT);
 	}
 
-	WzString descriptionStr = _("View and configure groups of units, which can be quickly selected and ordered.");
-	descriptionStr += "\n\n";
-	descriptionStr += _("Group buttons will glow red when units are lost (or taking lots of damage).");
 	setHelp(WidgetHelp()
-	  .setTitle(_("Unit Groups"))
-	  .setDescription(descriptionStr)
-	  .addInteraction({WidgetHelp::InteractionTriggers::PrimaryClick}, _("Select a Group"))
-	  .addInteraction({WidgetHelp::InteractionTriggers::SecondaryClick, WidgetHelp::InteractionTriggers::ClickAndHold}, _("Assign Selected Units to a Group"))
-	  .addInteraction({WidgetHelp::InteractionTriggers::Misc},  _("Center Camera on a Group by clicking or tapping twice on the group button")));
+	  .setTitle(WzString::fromUtf8("Unità selezionate"))
+	  .setDescription(WzString::fromUtf8("Mostra le unità selezionate, raggruppate per tipo."))
+	  .addInteraction({WidgetHelp::InteractionTriggers::PrimaryClick}, WzString::fromUtf8("Seleziona solo le unità di quel tipo"))
+	  .addInteraction({WidgetHelp::InteractionTriggers::SecondaryClick, WidgetHelp::InteractionTriggers::ClickAndHold}, WzString::fromUtf8("Centra la telecamera su quelle unità")));
 }
 
 void GroupsUIController::updateData()
 {
-	struct AccumulatedGroupInfo
+	// DedrisReforged: SC2-style — reflect the CURRENT SELECTION, grouped by unit type
+	// (buildComponentsFromDroid signature), instead of keyboard control-groups.
+	struct StackAccum
 	{
-		size_t numberInGroup = 0;
-		size_t numberDamagedInGroup = 0;
-		size_t numberCommandedByGroup = 0; // the number of droids commanded by commanders in this group
-		uint64_t totalGroupMaxHealth = 0;
-		DROID *displayDroid = nullptr;
-		std::map<std::vector<uint32_t>, size_t> unitcounter;
-		size_t most_droids_of_same_type_in_group = 0;
+		size_t count = 0;
+		size_t damaged = 0;
+		uint64_t maxHealth = 0;
+		uint64_t curHealth = 0;
+		DROID *rep = nullptr;
+		std::vector<uint32_t> key;
 	};
 
-	std::array<AccumulatedGroupInfo, 10> calculatedGroupInfo;
-	for (DROID *psDroid : gameWorld.objects.droids[selectedPlayer])
-	{
-		if (psDroid->repairGroup < calculatedGroupInfo.size()) {
-			calculatedGroupInfo[psDroid->repairGroup].numberDamagedInGroup++;
-		}
+	std::vector<StackAccum> stacks;
+	std::map<std::vector<uint32_t>, size_t> keyToIdx;
 
-		auto groupIdx = psDroid->group;
-		if (psDroid->group >= calculatedGroupInfo.size())
+	if (selectedPlayer < MAX_PLAYERS)
+	{
+		for (DROID *psDroid : gameWorld.objects.droids[selectedPlayer])
 		{
-			if ((psDroid->psGroup) && (psDroid->psGroup->psCommander) && (psDroid->psGroup->psCommander->group < calculatedGroupInfo.size()))
-			{
-				groupIdx = psDroid->psGroup->psCommander->group; // accumulate in commander's group
-				++(calculatedGroupInfo[groupIdx].numberCommandedByGroup);
-			}
-			else
+			if (!psDroid->selected)
 			{
 				continue;
 			}
+			std::vector<uint32_t> key = buildComponentsFromDroid(psDroid);
+			size_t idx;
+			auto it = keyToIdx.find(key);
+			if (it == keyToIdx.end())
+			{
+				idx = stacks.size();
+				keyToIdx[key] = idx;
+				stacks.emplace_back();
+				stacks[idx].rep = psDroid;
+				stacks[idx].key = key;
+			}
+			else
+			{
+				idx = it->second;
+			}
+			StackAccum &s = stacks[idx];
+			s.count++;
+			s.maxHealth += psDroid->originalBody;
+			s.curHealth += psDroid->body;
+			if (psDroid->body < psDroid->originalBody)
+			{
+				s.damaged++;
+			}
 		}
-
-		auto& currGroupInfo = calculatedGroupInfo[groupIdx];
-
-		// display whatever unit occurs the most in this group
-		// find the identifier for this droid
-		std::vector<uint32_t> components = buildComponentsFromDroid(psDroid);
-		if (++currGroupInfo.unitcounter[components] > currGroupInfo.most_droids_of_same_type_in_group)
-		{
-			currGroupInfo.most_droids_of_same_type_in_group = currGroupInfo.unitcounter[components];
-			currGroupInfo.displayDroid = psDroid;
-		}
-		currGroupInfo.numberInGroup++;
-		currGroupInfo.totalGroupMaxHealth += psDroid->originalBody;
 	}
 
-	for (size_t idx = 0; idx < calculatedGroupInfo.size(); ++idx)
+	numActiveStacks = std::min<size_t>(stacks.size(), groupInfo.size());
+	for (size_t idx = 0; idx < groupInfo.size(); ++idx)
 	{
-		const auto& calculatedInfo = calculatedGroupInfo[idx];
-		auto& storedGroupInfo = groupInfo[idx];
-		storedGroupInfo.numberInGroup = calculatedInfo.numberInGroup;
-		storedGroupInfo.numberDamagedInGroup = calculatedInfo.numberDamagedInGroup;
-		storedGroupInfo.numberCommandedByGroup = calculatedInfo.numberCommandedByGroup;
-		storedGroupInfo.totalGroupMaxHealth = calculatedInfo.totalGroupMaxHealth;
-		if (calculatedInfo.numberInGroup > 0)
+		GroupDisplayInfo &info = groupInfo[idx];
+		if (idx < numActiveStacks)
 		{
-			// generate a DROID_TEMPLATE from the displayDroid
-			templateSetParts(calculatedInfo.displayDroid, &(storedGroupInfo.displayDroidTemplate));
+			const StackAccum &s = stacks[idx];
+			info.numberInGroup = s.count;
+			info.numberDamagedInGroup = s.damaged;
+			info.numberCommandedByGroup = 0;
+			info.totalGroupMaxHealth = s.maxHealth;
+			info.totalCurrentBody = s.curHealth;
+			info.componentKey = s.key;
+			info.repDroidId = (s.rep) ? s.rep->id : 0;
+			templateSetParts(s.rep, &(info.displayDroidTemplate));
+		}
+		else
+		{
+			info.numberInGroup = 0;
+			info.numberDamagedInGroup = 0;
+			info.numberCommandedByGroup = 0;
+			info.totalGroupMaxHealth = 0;
+			info.totalCurrentBody = 0;
+			info.componentKey.clear();
+			info.repDroidId = 0;
 		}
 	}
 }
@@ -391,7 +413,7 @@ void GroupsForum::addTabList()
 	groupsList->setChildSpacing(OBJ_GAP, OBJ_GAP);
 	int groupListWidth = OBJ_BUTWIDTH * 5 + STAT_GAP * 4;
 	groupsList->setGeometry((OBJ_BACKWIDTH - groupListWidth) / 2, OBJ_TABY, groupListWidth, OBJ_BACKHEIGHT - OBJ_TABY);
-	WzString unitGroupsStr = _("Unit Groups:");
+	WzString unitGroupsStr = WzString::fromUtf8("Unità selezionate:");
 	unitGroupsStr += " ";
 	groupsList->setTitle(unitGroupsStr);
 }

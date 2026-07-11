@@ -31,7 +31,7 @@ ff,23,0,ff	// menu score loss
 37,ef,6f,ff	// menu score destroyed
 16,74,36,ff	// menu score built (verde reskin: accento selezione/evidenziazione menu; il blu semantico dei punteggi e' in scores.cpp)
 eb,eb,13,ff	// menu score rank
-91,0,c3,ff	// frame border normal
+26,30,2b,ff	// frame border normal (jade hairline sobrio, era viola 91,0,c3)
 c8,c8,c8,ff	// console text system
 ff,ff,ff,ff	// console text user
 ff,ff,0,ff	// console text ally
@@ -93,7 +93,7 @@ ff,00,00,ff	// demolish beam
 98,98,98,ff	// Don't know this player.
 ff,ff,f0,ff	// Seen this player before.
 b0,b0,ff,ff	// Server knows this player.
-0c,0f,0e,eb	// Default filled GUI box colour (OVERWATCH-C2 near-black slab, era verde translucido)
+0e,13,11,ec	// Default filled GUI box colour (jade-sober near-black slab, era verde translucido)
 1b,ff,5f,ff // Info messages text color
 10,10,80,bb	// Default notification box colour
 b0,8f,5f,ff	// Arizona fog

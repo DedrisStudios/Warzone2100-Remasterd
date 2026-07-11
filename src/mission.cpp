@@ -1842,10 +1842,13 @@ bool intAddMissionTimer()
 
 	sFormInit.width = iV_GetImageWidth(IntImages, IMAGE_MISSION_CLOCK); //TIMER_WIDTH;
 	sFormInit.height = iV_GetImageHeight(IntImages, IMAGE_MISSION_CLOCK); //TIMER_HEIGHT;
+	// DedrisReforged (SC2 layout): the top-right stacks energia chip (y=12,h=52) then the
+	// reticule (y=72,h=132); drop the mission clock below that stack so nothing overlaps.
+	const int missionTimerY = TIMER_Y + 188;
 	sFormInit.x = (SWORD)(RADTLX + RADWIDTH - sFormInit.width);
-	sFormInit.y = (SWORD)TIMER_Y;
+	sFormInit.y = (SWORD)missionTimerY;
 	sFormInit.calcLayout = LAMBDA_CALCLAYOUT_SIMPLE({
-		psWidget->move((SWORD)(RADTLX + RADWIDTH - psWidget->width() - 18), TIMER_Y);
+		psWidget->move((SWORD)(RADTLX + RADWIDTH - psWidget->width() - 18), TIMER_Y + 188);
 	});
 	sFormInit.UserData = PACKDWORD_TRI(0, IMAGE_MISSION_CLOCK, IMAGE_MISSION_CLOCK_UP);
 	sFormInit.pDisplay = intDisplayMissionClock;

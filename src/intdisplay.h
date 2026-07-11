@@ -116,6 +116,8 @@ class PowerBar: public W_BARGRAPH
 		{
 			WzText wzText;
 			WzText wzNeedText;
+			WzText wzLabel;
+			WzText wzIncome;
 		} cache;
 };
 

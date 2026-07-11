@@ -148,7 +148,10 @@ void	initConsoleMessages()
 
 	//	Set up the main console size and position x,y,width
 	setConsoleCalcLayout([]() {
-		setConsoleSizePos(16, (!challengeActive && (game.type == LEVEL_TYPE::SKIRMISH)) ? 32 : (32 + TIMER_Y), pie_GetVideoBufferWidth() - 32);
+		// DedrisReforged: the top-right now hosts the Energia resource chip (~290px wide),
+		// so end the console strip before it — otherwise right-aligned messages
+		// (e.g. "N unità selezionate") get covered by the chip.
+		setConsoleSizePos(16, (!challengeActive && (game.type == LEVEL_TYPE::SKIRMISH)) ? 32 : (32 + TIMER_Y), pie_GetVideoBufferWidth() - 314);
 
 		historyConsole.topX = HISTORYBOX_X;
 		historyConsole.topY = HISTORYBOX_Y;
