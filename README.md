@@ -1,26 +1,43 @@
 <h1 align="center">
-  <img src="icons/warzone2100.large.png" alt="Warzone 2100">
-  <br />
-  Warzone 2100 Remasterd
+  <img src="logo_reforged.png" alt="Warzone 2100 Reforged" width="560">
 </h1>
 
 <p align="center"><b>Un progetto DedrisStudios</b> — remaster non ufficiale di <a href="https://wz2100.net/">Warzone 2100</a>, lo storico RTS 3D open source del 1999.</p>
 
 ---
 
-**Warzone 2100 Remasterd** è un fork di [Warzone 2100](https://github.com/Warzone2100/warzone2100) che ammoderna il gioco originale mantenendone intatti gameplay e bilanciamento: asset grafici rimasterizzati in alta definizione, traduzione italiana completa, controlli moderni e una build web pensata anche per iPad.
+**Warzone 2100 Reforged** è un fork di [Warzone 2100](https://github.com/Warzone2100/warzone2100) che ammoderna il gioco originale mantenendone intatti gameplay e bilanciamento: interfaccia ridisegnata, asset grafici ricostruiti in alta definizione, traduzione italiana completa, controlli moderni e una versione per iPad con comandi touch.
 
 Il gioco resta **100% libero e gratuito**, con licenza GPL-2.0-or-later come l'originale.
 
 # Cosa cambia rispetto all'originale
 
-### Grafica
-- **23 cursori di gioco rimasterizzati** in alta definizione, ridisegnati a 32px nativi con hotspot allineati agli originali
-- **Bersagli nemici evidenziati**: parentesi angolari rosse attorno a unità, strutture nemiche e feature distruttibili visibili
-- **Menu principale personalizzato**: pannello pulsanti trasparente, link esterni rimossi
+### Nuovo HUD tattico
+- **Interfaccia di gioco ridisegnata da zero** in stile tattico moderno: pannelli scuri quasi-neri con rail verde luminoso e staffe angolari a mirino
+- **Icone dei comandi ridisegnate** (costruzione, produzione, ricerca, progettazione, intel, comandanti) su reticolo a esagoni scuri
+- **Barra dell'energia** come strumento tattico: gradiente verde→ciano con testa luminosa pulsante e tacche di scala
+- **Radar incorniciato** da staffe a mirino, contatori a schermo in stile "telemetria"
+- **Menu di pausa ridisegnato**: console tattica con indicatore di pausa, tempo di missione e voci a celle numerate
+- **Color-grade cinematografica** del campo di battaglia (tonemap filmico + vignettatura), su OpenGL e Vulkan
+- Reskin verde coerente esteso a **tutti i menu**: schermata iniziale, Opzioni, selettore campagne, lobby multigiocatore
 
-### Lingua
-- **Traduzione italiana completa al 100%**: interfaccia, messaggi e guida in-gioco
+### Immagini ricostruite in alta risoluzione
+- **Sfondi dei menu e schermata crediti** ricostruiti in HD, disegnati nelle proporzioni corrette 16:9 (l'originale li mostrava stirati in 4:3)
+- **23 cursori di gioco rimasterizzati** in alta definizione, con hotspot di click precisi per singolo cursore
+- **Nuovo logo** e icona dell'app macOS aggiornata
+
+### Texture in HD
+- **Upscale degli atlas texture a 2048²** con generazione di normal e specular map — lavoro in corso, partendo dalle 7 pagine principali che da sole coprono l'81% dei modelli 3D
+- La geometria dei modelli non viene toccata: si ammodernano solo le texture, così hitbox, UV e gameplay restano identici all'originale
+
+### Lingua italiana completa
+- **Traduzione italiana al 100%**: interfaccia, messaggi, guida in-gioco e tutti i nuovi testi introdotti dal remaster
+
+### Gameplay e UX
+- **Bersagli nemici evidenziati** con parentesi angolari rosse (unità, strutture e feature distruttibili)
+- **Barre della vita dei nemici sempre visibili**, non più solo puntandoli col mouse
+- Il **menu ordini si apre automaticamente** alla selezione di un'unità
+- La fabbrica mostra **quante unità puoi costruire** con l'energia attuale
 
 ### Controlli moderni
 | Tasto | Funzione |
@@ -31,23 +48,23 @@ Il gioco resta **100% libero e gratuito**, con licenza GPL-2.0-or-later come l'o
 | `F7` | Screenshot |
 | Tasto destro | Ordini alle unità (attivo di default) |
 
-Il menu ordini dell'unità si apre automaticamente quando selezioni un'unità, senza dover passare dal pannello.
-
 I comandi spostati per fare spazio ai nuovi binding: *Stop* su `K`, *Unità non assegnate* su `J`, *Rispondi al fuoco* su `V`, *Pattuglia* su `X`.
 
-### Build web e iPad
-- Build WebAssembly (Emscripten) con schermata di avvio minimale, pensata per il deploy su iPad tramite Cordova
-- Fix alla toolchain: build funzionante anche da directory con spazi nel percorso
+### Comandi touch e versione iPad
+- **Versione per Apple iPad**: build WebAssembly (Emscripten) impacchettata con Cordova, con server HTTP locale per far girare i thread WASM in WKWebView
+- **Comandi touch integrati**: un solo tocco impartisce direttamente gli ordini di movimento e attacco, con pulsanti touch a schermo
+- Schermata di avvio minimale con logo Reforged e tasti Play / Play again
+
+### Build e tooling
+- Script di build macOS portabile nel repo (`build-mac.sh`) con configurazione automatica e launcher cliccabili dal Finder
+- Build affidabile su volumi exFAT e da directory con spazi nel percorso
 
 # Remaster in corso
 
 Il lavoro sugli asset continua. In pipeline:
 
-- **Sfondi dei menu** rimasterizzati in HD
-- **Texture di gioco in HD**: upscale degli atlas a 2048² con generazione di normal e specular map (le 7 pagine principali coprono da sole l'81% dei modelli 3D)
+- **Texture di gioco in HD**: completamento dell'upscale degli atlas con normal e specular map
 - **Cinematiche della campagna** rimasterizzate
-
-La geometria dei modelli non viene toccata: si ammodernano solo le texture, così hitbox, UV e gameplay restano identici all'originale.
 
 # Compilare dai sorgenti
 
@@ -70,4 +87,4 @@ Warzone 2100 è stato sviluppato da **Pumpkin Studios** e pubblicato da Eidos In
 
 # Licenza
 
-Warzone 2100 Remasterd è distribuito sotto licenza [GPL-2.0-or-later](COPYING). Per i dettagli su dati, mod e componenti di terze parti vedi [COPYING.README](COPYING.README) e [COPYING.NONGPL](COPYING.NONGPL).
+Warzone 2100 Reforged è distribuito sotto licenza [GPL-2.0-or-later](COPYING). Per i dettagli su dati, mod e componenti di terze parti vedi [COPYING.README](COPYING.README) e [COPYING.NONGPL](COPYING.NONGPL).

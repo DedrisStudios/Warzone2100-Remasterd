@@ -7,6 +7,9 @@ Tutte le modifiche del progetto, dalla più recente. Le regole di aggiornamento 
 ### Grafica
 - HUD: menu dei comandi (reticolo) in alto a destra abbassato di 20 px — non è più attaccato alla barra dell'energia
 
+### Documentazione
+- README aggiornato col nuovo logo «Warzone 2100 Reforged» e l'elenco completo delle modifiche del remaster (nuovo HUD tattico, immagini HD, texture in upscale, italiano completo, comandi touch, versione iPad)
+
 ## 2026-07-11
 
 ### Grafica
