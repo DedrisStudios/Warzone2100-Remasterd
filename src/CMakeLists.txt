@@ -793,9 +793,13 @@ if(NOT CMAKE_SYSTEM_NAME MATCHES "(Darwin|Emscripten)" AND NOT MSVC)
 endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
-	if (NOT BUILD_SHARED_LIBS)
-		ADD_TARGET_LINK_FLAGS_IF_SUPPORTED(TARGET warzone2100 LINK_FLAGS "-Wl,-sectcreate,__RESTRICT,__restrict,/dev/null" CONFIG RELEASE CACHED_RESULT_NAME LINK_FLAG_WL_SECTCREATE_RESTRICT_SUPPORTED)
-	endif()
+	# DedrisReforged: NON aggiungere il segmento __RESTRICT (upstream lo usa per le
+	# build statiche vcpkg). Qui il binario linka dylib Homebrew e il pacchetto
+	# portable le carica via @executable_path/../Frameworks: con __RESTRICT dyld
+	# rifiuta l'espansione dei percorsi @ e l'app portable non parte.
+	# if (NOT BUILD_SHARED_LIBS)
+	# 	ADD_TARGET_LINK_FLAGS_IF_SUPPORTED(TARGET warzone2100 LINK_FLAGS "-Wl,-sectcreate,__RESTRICT,__restrict,/dev/null" CONFIG RELEASE CACHED_RESULT_NAME LINK_FLAG_WL_SECTCREATE_RESTRICT_SUPPORTED)
+	# endif()
 endif()
 
 #######################

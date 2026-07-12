@@ -7,6 +7,10 @@ Tutte le modifiche del progetto, dalla più recente. Le regole di aggiornamento 
 ### Grafica
 - HUD: menu dei comandi (reticolo) in alto a destra abbassato di 20 px — non è più attaccato alla barra dell'energia
 
+### Build/Web
+- Nuovo script `package-mac-portable.sh`: crea una versione portable dell'app macOS (le librerie Homebrew vengono copiate dentro il bundle e i riferimenti riscritti) — l'app gira anche su Mac senza Homebrew, con zip pronto per la distribuzione
+- Build macOS: rimosso il segmento `__RESTRICT` dal binario (serviva alle build statiche upstream): con quello attivo il sistema rifiutava di caricare le librerie interne al bundle e la versione portable non partiva
+
 ### Documentazione
 - README aggiornato col nuovo logo «Warzone 2100 Reforged» e l'elenco completo delle modifiche del remaster (nuovo HUD tattico, immagini HD, texture in upscale, italiano completo, comandi touch, versione iPad)
 
