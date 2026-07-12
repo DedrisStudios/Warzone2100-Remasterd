@@ -211,6 +211,10 @@ static inline bool isFullscreenMapPreviewActive()
 
 static std::weak_ptr<WzMultiplayerOptionsTitleUI> currentMultiOptionsTitleUI;
 
+// AfterFall: avvio scaramuccia differito da --skirmish. Armato in start(), eseguito in run()
+// quando il ResourceLoadingController e' idle. 0=inattivo, 1=host+ready, 2=avvia partita.
+static int afSkirmishAutostartPhase = 0;
+
 /// end of globals.
 // ////////////////////////////////////////////////////////////////////////////
 // Function protos
@@ -5088,6 +5092,15 @@ static void loadMapPlayerSettings(WzConfig& ini)
 				}
 			}
 		}
+		// AfterFall: colore per-giocatore dal file settings (indice palette 0-15: 0=Green, 1=Orange,
+		// 2=Grey, 3=Black, 4=Red, 5=Blue, 6=Pink, 7=Cyan, 8=Yellow, ...). changeColour fa lo swap
+		// con chi detiene gia' quel colore, mantenendo l'unicita' (gli slot AI non sono "allocated",
+		// quindi lo swap e' sempre permesso in locale).
+		if (ini.contains("colour"))
+		{
+			int col = ini.value("colour").toInt();
+			changeColour(i, col, realSelectedPlayer);
+		}
 		if (ini.contains("spectator") && !challengeActive)
 		{
 			NetPlay.players[i].isSpectator = ini.value("spectator", false).toBool();
@@ -6512,6 +6525,43 @@ TITLECODE WzMultiplayerOptionsTitleUI::run()
 		// shortcut any further processing - stopped joining, this title UI is about to go away
 		return TITLECODE_CONTINUE;
 	}
+
+	// AfterFall: avvio scaramuccia differito (armato in start() per --skirmish). Due fasi, entrambe
+	// solo a ResourceLoadingController idle (cosi' startMultiplayerGame() non asserisce). In una
+	// scaramuccia LOCALE non arriva alcun NET_READY_REQUEST (nessun client) -> il trigger di avvio
+	// "tutti pronti" in recvReadyRequest (riga ~6188) NON scatta mai. Quindi lo replichiamo noi:
+	//   Fase 1: startHost() locale (come il click su "Inizia a ospitare").
+	//   Fase 2: ci mettiamo "pronti" (per l'host e' una changeReadyStatus diretta) e, quando
+	//           multiplayPlayersReady() e' vero, chiamiamo startMultiplayerGame() ESATTAMENTE come
+	//           la riga 6188, uscendo subito da run() con TITLECODE_CONTINUE (come il path
+	//           StoppedJoining) -> nessun deadlock, il loader gira nel contesto giusto.
+	if (afSkirmishAutostartPhase != 0 && !ResourceLoadingController::instance().active())
+	{
+		if (afSkirmishAutostartPhase == 1)
+		{
+			if (!ingame.localJoiningInProgress)
+			{
+				startHost();
+			}
+			afSkirmishAutostartPhase = 2;
+		}
+		else if (afSkirmishAutostartPhase == 2 && NetPlay.isHost)
+		{
+			if (!getHostLaunchStartNotReady() && !NetPlay.players[selectedPlayer].ready)
+			{
+				sendReadyRequest(selectedPlayer, true);
+			}
+			if (multiplayPlayersReady())
+			{
+				afSkirmishAutostartPhase = 0;
+				startMultiplayerGame();
+				// reset flag in case people dropped/quit on join screen
+				NETsetPlayerConnectionStatus(CONNECTIONSTATUS_NORMAL, NET_ALL_PLAYERS);
+				return TITLECODE_CONTINUE; // esce da run() subito dopo l'avvio (come StoppedJoining)
+			}
+		}
+	}
+
 	if (NetPlay.isHost)
 	{
 		// send it for each player that needs it
@@ -7015,6 +7065,19 @@ void WzMultiplayerOptionsTitleUI::start()
 			// reset flag in case people dropped/quit on join screen
 			NETsetPlayerConnectionStatus(CONNECTIONSTATUS_NORMAL, NET_ALL_PLAYERS);
 		}
+	}
+
+	// AfterFall: --skirmish deve entrare DRITTO in partita (niente lobby "Inizia a ospitare").
+	// HostLaunch::Skirmish si attiva SOLO da CLI (--skirmish), mai dalla scaramuccia da menu,
+	// quindi questo non tocca il flusso normale. NON avviamo qui: in start() il map-preview
+	// asincrono tiene ATTIVO il ResourceLoadingController e startMultiplayerGame() ->
+	// runTaskToCompletion asserisce ("requires idle controller") mandando in stallo il load.
+	// Quindi ARMIAMO un avvio differito, eseguito in run() a due fasi appena il controller e' idle.
+	// La guardia PHYSFS_exists garantisce fallback sicuro alla lobby se il file settings manca.
+	if (getHostLaunch() == HostLaunch::Skirmish
+	    && PHYSFS_exists(("tests/" + wz_skirmish_test()).c_str()))
+	{
+		afSkirmishAutostartPhase = 1;
 	}
 }
 

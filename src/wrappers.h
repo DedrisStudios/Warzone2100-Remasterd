@@ -49,6 +49,8 @@ enum class HostLaunch
 void setHostLaunch(HostLaunch value);
 HostLaunch getHostLaunch();
 void resetHostLaunch();
+// AfterFall: true se la sessione e' MAI partita con --skirmish da CLI (non viene azzerato da resetHostLaunch)
+bool everLaunchedCliSkirmishSession();
 
 void setHeadlessGameMode(bool enabled);
 bool headlessGameMode();
@@ -60,6 +62,10 @@ bool frontendInitVars();
 TITLECODE titleLoop();
 
 void initLoadingScreen(bool drawbdrop);
+#if defined(__EMSCRIPTEN__)
+// AfterFall: notifica il guscio web che il gameplay e' iniziato (vedi wrappers.cpp)
+void wzemscripten_notify_game_started();
+#endif
 void closeLoadingScreen();
 bool isLoadingScreenActive();
 void presentLoadingScreenForCurrentFrame();

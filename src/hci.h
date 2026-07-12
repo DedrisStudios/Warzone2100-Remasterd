@@ -103,6 +103,13 @@ enum  				  // Reticule button indecies.
 #define RET_FORMWIDTH		132
 #define RET_FORMHEIGHT		132
 
+// DedrisReforged: the command reticule is now drawn as a labelled 3-column grid
+// (icon + name + hotkey) instead of the hexagon honeycomb, so the visible form is
+// larger. RET_FORMWIDTH/HEIGHT above are deliberately left at 132 because the
+// object/design/research screens anchor their X off RET_X + RET_FORMWIDTH.
+#define RETGRID_FORMWIDTH	232
+#define RETGRID_FORMHEIGHT	148
+
 // chat stuff
 #define CHAT_CONSOLEBOX	0x4A001
 #define CHAT_EDITBOX	0x4A004

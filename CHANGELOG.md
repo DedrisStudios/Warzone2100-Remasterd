@@ -2,18 +2,34 @@
 
 Tutte le modifiche del progetto, dalla più recente. Le regole di aggiornamento sono in [AGENTS.md](AGENTS.md) §5.
 
+## 2026-07-12
+
+### Grafica
+- HUD: menu dei comandi (reticolo) in alto a destra abbassato di 20 px — non è più attaccato alla barra dell'energia
+
 ## 2026-07-11
 
 ### Grafica
+- HUD: box degli ordini unità spostato di 20 px più in alto e 20 px più a destra
 - HUD: barra dell'energia abbassata di 10 px per un migliore allineamento in alto a destra
 - HUD: pulsante impostazioni (gear) in alto a destra abbassato di qualche px per allinearlo alla barra dell'energia
 - HUD: il messaggio «Energia insufficiente» sulle barre di produzione/costruzione/ricerca va ora su due righe, così non sborda più dal rettangolo
+- Cursori (prototipo): freccia default, mirino d'attacco, cursore «muovi» e «costruisci» ridisegnati in stile tattico ispirato a StarCraft 2 — contorno scuro netto, riempimento verde «Project» e colore semantico (verde = azione amica, rosso = attacco), pensati per leggersi su ogni terreno a 32px
+- Menu di pausa ridisegnato in versione «2026» tattica: console scura quasi-nera con angoli smussati e staffe a mirino ai quattro angoli, intestazione con indicatore di pausa pulsante, titolo, sottotitolo e tempo di missione, piè di pagina con la scorciatoia ESC; ogni voce è una «cella» con numero, icona, etichetta e chevron/hint al passaggio del mouse, rail verde a sinistra, e la voce «Abbandona» evidenziata in rosso
+
+### Controlli
+- Cursori: il punto di click (hotspot) può ora essere definito per singolo cursore invece di essere forzato al centro dell'immagine — così la freccia default clicca esattamente dalla punta anche se la punta non è al centro
 
 ### Gameplay/UX
+- Le barre della vita di unità e strutture nemiche visibili sono ora mostrate in permanenza (sotto l'oggetto), non più solo puntandole col mouse tenendo premuto
 - Fabbrica: passando il mouse su un'unità costruibile, il suggerimento mostra ora quante se ne possono costruire con l'energia attuale (oltre al costo)
 
 ### Traduzione
 - I nuovi testi «Energia insufficiente» (barre di produzione) e «Costruibili con l'energia attuale» (fabbrica) passano ora dal sistema di traduzione: italiano dal file `.po`, inglese come ripiego per le altre lingue
+- Nuove stringhe del menu di pausa 2026 tradotte in italiano dal file `.po`: «MENU DI PAUSA», «SIMULAZIONE SOSPESA», «TEMPO MISSIONE» (inglese come ripiego per le altre lingue)
+
+### Documentazione
+- Nuovo archivio web degli asset 3D (`webdoc-reforge/assets.html`): pagina autonoma in un solo file che estrae e mostra tutti i 644 modelli `.pie` del gioco (corpi, propulsioni, armi/torrette, edifici, elementi mappa, effetti) come miniature 3D texturizzate, con visualizzatore interattivo al click (rotazione, zoom, wireframe, toggle texture), ricerca e filtri per categoria — utile per pianificare il remaster HD delle texture
 
 ## 2026-07-10
 

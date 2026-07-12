@@ -293,6 +293,10 @@ if(CMAKE_SYSTEM_NAME MATCHES "Emscripten")
 	# Specify properties set on incoming Module object (see shell.html, postjs.js, prejs.js)
 	target_link_options(warzone2100 PRIVATE "SHELL:-s INCOMING_MODULE_JS_API=[wasmMemory,arguments,preRun,postRun,print,printErr,canvas,setStatus,monitorRunDependencies,locateFile,onExit]")
 
+	# AfterFall: espone FS (+ run dependency) sull'oggetto Module cosi' il guscio puo' scrivere,
+	# in preRun, il file settings della scaramuccia in configdir (auto-avvio zero-click).
+	target_link_options(warzone2100 PRIVATE "SHELL:-s EXPORTED_RUNTIME_METHODS=FS,callMain,addRunDependency,removeRunDependency")
+
 	# Stack and memory usage
 	target_link_options(warzone2100 PRIVATE "SHELL:-s STACK_SIZE=10485760")
 	target_link_options(warzone2100 PRIVATE "SHELL:-s INITIAL_MEMORY=268435456") # 256 MB

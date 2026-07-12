@@ -3470,6 +3470,8 @@ static void	drawStructureSelections()
 			{
 				const int scale = MAX(psS->pStructureType->baseWidth, psS->pStructureType->baseBreadth);
 				drawEnemyTargetOutline(psS->sDisplay.screenX, psS->sDisplay.screenY, scale * 20);
+				// DedrisReforged: mostra sempre la barra vita sotto le strutture nemiche visibili
+				batchedObjectStatusRenderer.addEnemyStructureHealthToRender(const_cast<STRUCTURE *>(psS));
 			}
 		}
 	}
@@ -3742,6 +3744,8 @@ static void	drawDroidSelections()
 				if (isEnemyOfLocalPlayer(i) && psDroid->visibleForLocalDisplay() == UBYTE_MAX)
 				{
 					drawEnemyTargetOutline(psDroid->sDisplay.screenX, psDroid->sDisplay.screenY, psDroid->sDisplay.screenR);
+					// DedrisReforged: mostra sempre la barra vita sopra le unità nemiche visibili
+					batchedObjectStatusRenderer.addEnemyDroidHealthToRender(const_cast<DROID *>(psDroid));
 				}
 				/* If it's selected */
 				if (psDroid->flags.test(OBJECT_FLAG_TARGETED) && psDroid->visibleForLocalDisplay() == UBYTE_MAX)

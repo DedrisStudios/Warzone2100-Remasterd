@@ -865,6 +865,11 @@ bool startGameAfterLevelLoad()
 	// set a flag for the trigger/event system to indicate initialisation is complete
 	gameInitialised = true;
 
+#if defined(__EMSCRIPTEN__)
+	// AfterFall: avvisa il guscio web che il gameplay e' iniziato (congeda il briefing di battaglia)
+	wzemscripten_notify_game_started();
+#endif
+
 	if (challengeActive)
 	{
 		addMissionTimerInterface();
@@ -1131,6 +1136,15 @@ static void runGameLoop()
 		ActivityManager::instance().quitGame(collectEndGameStatsData(), Cheated);
 		cdAudio_SetGameMode(MusicGameMode::MENUS);
 		stopGameLoop();
+		// AfterFall: in una sessione avviata da CLI con --skirmish (guscio web zero-menu) non
+		// esiste un "menu principale" da mostrare: all'abbandono usciamo dall'app, il guscio
+		// intercetta l'uscita e riconsegna il controllo alla web app.
+		if (everLaunchedCliSkirmishSession())
+		{
+			wzQuit(0);
+			gameLoopStatus = GAMECODE_CONTINUE;
+			return;
+		}
 		startTitleLoop(); // Restart into titleloop
 		gameLoopStatus = GAMECODE_CONTINUE;
 		return;

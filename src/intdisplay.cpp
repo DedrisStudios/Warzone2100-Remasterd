@@ -770,6 +770,14 @@ void IntFormAnimated::display(int xOffset, int yOffset)
 	                   aBegin.width()  + (aEnd.width()  - aBegin.width()) * num / den,
 	                   aBegin.height() + (aEnd.height() - aBegin.height()) * num / den);
 
+	if (skipDefaultFrameRendering)
+	{
+		// DedrisRemastered: il menu di pausa 2026 disegna una propria "chrome"
+		// sovrapposta — qui non disegniamo nulla, ma la macchina a stati sopra
+		// (apertura/chiusura/eliminazione) resta attiva.
+		return;
+	}
+
 	RenderWindowFrame(FRAME_NORMAL, aCur.x(), aCur.y(), aCur.width(), aCur.height());
 
 	// DedrisRemastered (OVERWATCH-C2 HUD): "lit-slab" signature drawn procedurally

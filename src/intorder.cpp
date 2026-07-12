@@ -32,14 +32,17 @@
 #include <algorithm>
 
 
-#define ORDER_X			6
-#define ORDER_Y			45
+#define ORDER_X			26
+#define ORDER_Y			25
 #define ORDER_WIDTH		RET_FORMWIDTH
 #define ORDER_HEIGHT	273
 #define ORDER_BUTX		8
 #define ORDER_BUTY		16
 #define ORDER_BUTGAP	4
-#define ORDER_BOTTOMY	318	+ E_H
+// DedrisReforged (SC2 layout): the minimap now sits in the bottom-left corner, so the
+// unit order box is raised ~60px to sit ABOVE the minimap instead of overlapping it.
+// Box ordini spostato di +20px a destra (ORDER_X) e -20px in alto (ORDER_Y/ORDER_BOTTOMY).
+#define ORDER_BOTTOMY	238	+ E_H
 
 #define MAX_DISPLAYABLE_ORDERS 11	// Max number of displayable orders.
 #define MAX_ORDER_BUTS 5		// Max number of buttons for a given order.

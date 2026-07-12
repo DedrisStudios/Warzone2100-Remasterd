@@ -154,9 +154,23 @@ bool recalculateEffectiveHeadlessValue()
 	return false;
 }
 
+// AfterFall: ricorda se la sessione e' partita da CLI con --skirmish. A differenza di hostlaunch
+// NON viene mai azzerato (resetHostLaunch scatta gia' all'avvio della lobby): serve a fine partita
+// per uscire dall'app invece di mostrare il menu principale (guscio web zero-menu).
+static bool bEverCliSkirmishSession = false;
+
+bool everLaunchedCliSkirmishSession()
+{
+	return bEverCliSkirmishSession;
+}
+
 void setHostLaunch(HostLaunch value)
 {
 	hostlaunch = value;
+	if (value == HostLaunch::Skirmish)
+	{
+		bEverCliSkirmishSession = true;
+	}
 	bActualHeadlessAutoGameMode = recalculateEffectiveHeadlessValue();
 }
 
@@ -343,6 +357,18 @@ void wzemscripten_display_web_loading_indicator(int x)
 			console.log('Cannot find wz_js_display_loading_indicator function');
 		}
 	}, x);
+}
+
+// AfterFall: segnala al guscio web che la PARTITA e' effettivamente iniziata (livello caricato,
+// gameplay attivo) — a differenza del loading indicator, che scatta anche per title/preview.
+// Il guscio la usa per congedare la propria schermata di caricamento (briefing di battaglia).
+void wzemscripten_notify_game_started()
+{
+	MAIN_THREAD_EM_ASM({
+		if (typeof wz_js_game_started === "function") {
+			wz_js_game_started();
+		}
+	});
 }
 #endif
 

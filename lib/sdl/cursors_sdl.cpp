@@ -1344,6 +1344,22 @@ SDL_Cursor* init_cursor_from_image(iV_Image&& sprite, int hot_x, int hot_y)
 }
 
 /**
+	Hotspot (action-point) per-cursore, come frazione 0..1 della dimensione
+	dell'immagine. Serve per i cursori ridisegnati la cui punta/azione NON e'
+	al centro (es. la freccia default ha la punta in alto-sinistra). Se un
+	cursore non e' elencato -> {-1,-1} = centro (comportamento storico).
+ */
+struct CursorHotspotFrac { float fx; float fy; };
+static CursorHotspotFrac cursorHotspotFrac(CURSOR cur)
+{
+	switch (cur)
+	{
+	case CURSOR_DEFAULT: return { 0.081f, 0.062f }; // punta freccia in alto-sinistra
+	default:             return { -1.0f, -1.0f };   // centro
+	}
+}
+
+/**
 	init_system_ColorCursor()-- Create a colored mouse cursor image
  */
 SDL_Cursor *init_system_ColorCursor(CURSOR cur, const char *fileName)
@@ -1355,9 +1371,10 @@ SDL_Cursor *init_system_ColorCursor(CURSOR cur, const char *fileName)
 		exit(-1);
 	}
 
-	// We center the hotspot for all (FIXME ?)
-	int hot_x = sprite.width() / 2;
-	int hot_y = sprite.height() / 2;
+	// Hotspot per-cursore (frazione), altrimenti centro dell'immagine.
+	CursorHotspotFrac hf = cursorHotspotFrac(cur);
+	int hot_x = (hf.fx < 0.0f) ? (int)(sprite.width()  / 2) : (int)(hf.fx * sprite.width()  + 0.5f);
+	int hot_y = (hf.fy < 0.0f) ? (int)(sprite.height() / 2) : (int)(hf.fy * sprite.height() + 0.5f);
 
 	return init_cursor_from_image(std::move(sprite), hot_x, hot_y);
 }

@@ -234,10 +234,17 @@ public:
 	void closeAnimateDelete(const W_ANIMATED_ON_CLOSE_FUNC& onCloseAnimateFinished = nullptr);              ///< Animates the form closing, and deletes itself when done.
 	bool isClosing() const;
 
+	// DedrisRemastered: quando true, il form NON disegna la cornice standard
+	// (RenderWindowFrame + rail/staffe del reskin). Usato dal menu di pausa 2026
+	// che disegna una propria "chrome" sovrapposta. Default false => nessun altro
+	// pannello del gioco cambia aspetto.
+	void setSkipDefaultFrameRendering(bool skip) { skipDefaultFrameRendering = skip; }
+
 private:
 	unsigned        startTime;              ///< Animation start time
 	int             currentAction;          ///< Opening/open/closing/closed.
 	W_ANIMATED_ON_CLOSE_FUNC	onCloseAnimFinished;
+	bool            skipDefaultFrameRendering = false;
 };
 
 void intDisplayImage(WIDGET *psWidget, UDWORD xOffset, UDWORD yOffset);

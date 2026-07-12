@@ -102,21 +102,38 @@ struct BUTSTATE
 	bool Hidden;
 };
 
-struct BUTOFFSET
+struct RETGRIDCELL
 {
 	SWORD x;
 	SWORD y;
+	SWORD w;
+	SWORD h;
 };
 
-static BUTOFFSET ReticuleOffsets[NUMRETBUTS] =  	// Reticule button form relative positions.
+// DedrisReforged: command reticule laid out as a 3-column labelled grid (icon +
+// name + hotkey) rather than a hexagon honeycomb. Cells are indexed in RETBUT_*
+// order; the central Cancel/Close spans the full bottom row.
+static RETGRIDCELL ReticuleGrid[NUMRETBUTS] =  	// Reticule button form relative positions/sizes.
 {
-	{43, 47},	// RETBUT_CANCEL,
-	{47, 15},	// RETBUT_FACTORY,
-	{81, 33},	// RETBUT_RESEARCH,
-	{81, 69},	// RETBUT_BUILD,
-	{47, 87},	// RETBUT_DESIGN,
-	{13, 69},	// RETBUT_INTELMAP,
-	{13, 33},	// RETBUT_COMMAND,
+	{ 10, 112, 212, 26},	// RETBUT_CANCEL   (full-width bottom bar)
+	{ 10,  10,  68, 46},	// RETBUT_FACTORY  (row 0, col 0)
+	{ 82,  10,  68, 46},	// RETBUT_RESEARCH (row 0, col 1)
+	{154,  10,  68, 46},	// RETBUT_BUILD    (row 0, col 2)
+	{ 10,  61,  68, 46},	// RETBUT_DESIGN   (row 1, col 0)
+	{ 82,  61,  68, 46},	// RETBUT_INTELMAP (row 1, col 1)
+	{154,  61,  68, 46},	// RETBUT_COMMAND  (row 1, col 2)
+};
+
+// Always-visible short labels + hotkey hints for the grid buttons. The label
+// source strings already exist in the .po, so _() localises them for free
+// (Manufacture->Produzione, Research->Ricerca, ...). Indexed in RETBUT_* order.
+static const char *ReticuleLabel[NUMRETBUTS] =
+{
+	"Close", "Manufacture", "Research", "Build", "Design", "Intelligence Display", "Commanders"
+};
+static const char *ReticuleHotkey[NUMRETBUTS] =
+{
+	"", "F1", "F2", "F3", "F4", "F5", "F6"
 };
 
 static BUTSTATE ReticuleEnabled[NUMRETBUTS] =  	// Reticule button enable states.
@@ -393,6 +410,18 @@ optional<std::string> getReticuleButtonDisplayFilename(int ButId)
 	return retbutstats[ButId].filename.toUtf8();
 }
 
+// DedrisReforged: size a reticule button to its grid cell. Unlike
+// setReticuleButtonDimensions() (used by the in-game options button, which sizes
+// to its image + an ellipse hit-test), the grid cells use the full rectangular
+// hit area so the text label is clickable too.
+static void setReticuleGridGeometry(W_BUTTON &button)
+{
+	unsigned idx = button.UserData;
+	ASSERT_OR_RETURN(, idx < NUMRETBUTS, "Bad reticule button index: %u", idx);
+	const RETGRIDCELL &cell = ReticuleGrid[idx];
+	button.setGeometry(cell.x, cell.y, cell.w, cell.h);
+}
+
 void setReticuleStats(int ButId, std::string tip, std::string filename, std::string filenameDown, const playerCallbackFunc& callbackFunc)
 {
 	ASSERT_OR_RETURN(, (ButId >= 0) && (ButId < NUMRETBUTS), "Invalid ButId: %d", ButId);
@@ -411,7 +440,7 @@ void setReticuleStats(int ButId, std::string tip, std::string filename, std::str
 		return;
 	}
 
-	setReticuleButtonDimensions(*retbutstats[ButId].button, retbutstats[ButId].filename);
+	setReticuleGridGeometry(*retbutstats[ButId].button);
 
 	if (!retbutstats[ButId].tip.empty())
 	{
@@ -450,87 +479,97 @@ void setReticulesEnabled(bool enabled)
 	}
 }
 
+// DedrisReforged: draw one command-reticule cell as a labelled tactical button
+// (icon on top, localised name below, hotkey top-right) with the HUD's green
+// "lit-slab" states: cell border, hover underline and an active/pressed rail.
 static void intDisplayReticuleButton(WIDGET *psWidget, UDWORD xOffset, UDWORD yOffset)
 {
-	const int x = xOffset + psWidget->x();
-	const int y = yOffset + psWidget->y();
-	int DownTime = retbutstats[psWidget->UserData].downTime;
-	bool flashing = retbutstats[psWidget->UserData].flashing;
-	int flashTime = retbutstats[psWidget->UserData].flashTime;
 	ASSERT_OR_RETURN(, psWidget->type == WIDG_BUTTON, "Not a button");
 	W_BUTTON *psButton = (W_BUTTON *)psWidget;
-	bool butDisabled = psButton->state & WBUT_DISABLE;
+	const unsigned idx = psWidget->UserData;
+	ASSERT_OR_RETURN(, idx < NUMRETBUTS, "Bad reticule button index: %u", idx);
+	RETBUTSTATS &st = retbutstats[idx];
 
-	if (retbutstats[psWidget->UserData].filename.isEmpty() && !butDisabled)
+	const int x0 = xOffset + psWidget->x();
+	const int y0 = yOffset + psWidget->y();
+	const int cw = psWidget->width();
+	const int ch = psWidget->height();
+	const int x1 = x0 + cw;
+	const int y1 = y0 + ch;
+	const bool isCancel = (idx == RETBUT_CANCEL);
+
+	bool butDisabled = psButton->state & WBUT_DISABLE;
+	if (st.filename.isEmpty() && !butDisabled && !isCancel)
 	{
 		butDisabled = true;
-		retbutstats[psWidget->UserData].button->setState(WBUT_DISABLE);
+		st.button->setState(WBUT_DISABLE);
 	}
 
-	if (butDisabled)
+	const bool clickable   = buttonIsClickable(psButton->id);
+	const bool down        = (psButton->state & (WBUT_DOWN | WBUT_CLICKLOCK)) && clickable;
+	const bool highlighted = buttonIsHighlighted(psButton);
+	const bool flashOn     = st.flashing && !gamePaused() && ((realTime / 250) % 2) != 0;
+
+	// --- cell chrome (green zone: drawn procedurally) ---
+	const PIELIGHT border     = pal_RGBA(78, 158, 123, butDisabled ? 40 : 105);
+	const PIELIGHT fillActive  = pal_RGBA(78, 158, 123, 70);
+	const PIELIGHT railActive  = pal_RGBA(120, 240, 180, 255);
+	const PIELIGHT railHover    = pal_RGBA(120, 240, 180, 170);
+	iV_Box(x0, y0, x1 - 1, y1 - 1, border);
+	if (down || flashOn)
 	{
-		if (psWidget->UserData != RETBUT_CANCEL)
-		{
-			iV_DrawImage2("image_reticule_grey.png", x, y, psWidget->width(), psWidget->height());
-		}
-		else
-		{
-			iV_DrawImage2(retbutstats[psWidget->UserData].filenameDown, x, y, psWidget->width(), psWidget->height());
-		}
-		return;
+		pie_UniTransBoxFill(x0 + 1, y0 + 1, x1 - 1, y1 - 1, fillActive);
+		pie_UniTransBoxFill(x0 + 1, y1 - 2, x1 - 1, y1 - 1, railActive);
+	}
+	else if (highlighted)
+	{
+		pie_UniTransBoxFill(x0 + 1, y1 - 2, x1 - 1, y1 - 1, railHover);
 	}
 
-	bool Down = psButton->state & (WBUT_DOWN | WBUT_CLICKLOCK);
-	if (Down && buttonIsClickable(psButton->id))
+	// --- pick the icon sprite for the current state ---
+	WzString icon;
+	if (butDisabled)          { icon = isCancel ? st.filenameDown : WzString::fromUtf8("image_reticule_grey.png"); }
+	else if (down || flashOn) { icon = !st.filenameDown.isEmpty() ? st.filenameDown : st.filename; }
+	else                      { icon = st.filename; }
+
+	const PIELIGHT labelCol = butDisabled ? pal_RGBA(110, 140, 128, 190)
+	                        : (down ? pal_RGBA(195, 245, 215, 255) : pal_RGBA(150, 225, 195, 255));
+	const char *label = _(ReticuleLabel[idx]);
+
+	if (isCancel)
 	{
-		if ((DownTime < 1) && (psWidget->UserData != RETBUT_CANCEL))
-		{
-			iV_DrawImage2("image_reticule_butdown.png", x, y, psWidget->width(), psWidget->height());
-		}
-		else
-		{
-			iV_DrawImage2(retbutstats[psWidget->UserData].filenameDown, x, y, psWidget->width(), psWidget->height());
-		}
-		DownTime++;
-		flashing = false;	// stop the reticule from flashing if it was
+		// Full-width bar: [icon] label, centred horizontally.
+		const int iw = 18, ih = 15;
+		const int tw = iV_GetTextWidth(WzString::fromUtf8(label), font_small);
+		const int total = iw + 6 + tw;
+		const int ix = x0 + (cw - total) / 2;
+		const int iy = y0 + (ch - ih) / 2;
+		if (!icon.isEmpty()) { iV_DrawImage2(icon, ix, iy, iw, ih); }
+		iV_SetTextColour(labelCol);
+		iV_DrawText(label, ix + iw + 6, y0 + (ch + iV_GetTextAboveBase(font_small)) / 2, font_small);
 	}
 	else
 	{
-		if (flashing && !gamePaused())
+		// Icon centred at top, label centred below, hotkey top-right.
+		const int iw = 30, ih = 24;
+		const int ix = x0 + (cw - iw) / 2;
+		const int iy = y0 + 2;
+		if (!icon.isEmpty()) { iV_DrawImage2(icon, ix, iy, iw, ih); }
+
+		const int tw = iV_GetTextWidth(WzString::fromUtf8(label), font_small);
+		iV_SetTextColour(labelCol);
+		iV_DrawText(label, x0 + (cw - tw) / 2, y1 - 4, font_small);
+
+		if (ReticuleHotkey[idx][0] != '\0')
 		{
-			if (((realTime / 250) % 2) != 0)
-			{
-				iV_DrawImage2(retbutstats[psWidget->UserData].filenameDown, x, y, psWidget->width(), psWidget->height());
-				flashTime = 0;
-			}
-			else
-			{
-				iV_DrawImage2(retbutstats[psWidget->UserData].filename, x, y, psWidget->width(), psWidget->height());
-			}
-			flashTime++;
-		}
-		else
-		{
-			iV_DrawImage2(retbutstats[psWidget->UserData].filename, x, y, psWidget->width(), psWidget->height());
-			DownTime = 0;
+			const int kw = iV_GetTextWidth(WzString::fromUtf8(ReticuleHotkey[idx]), font_small);
+			iV_SetTextColour(butDisabled ? pal_RGBA(90, 115, 105, 160) : pal_RGBA(110, 190, 155, 210));
+			iV_DrawText(ReticuleHotkey[idx], x1 - kw - 3, y0 + 2 + iV_GetTextAboveBase(font_small), font_small);
 		}
 	}
 
-	bool highlighted = buttonIsHighlighted(psButton);
-	if (highlighted)
-	{
-		if (psWidget->UserData == RETBUT_CANCEL)
-		{
-			iV_DrawImage2("image_cancel_hilight.png", x - 1, y - 1, psWidget->width() + 2, psWidget->height() + 2);
-		}
-		else
-		{
-			iV_DrawImage2("image_reticule_hilight.png", x - 1, y - 1, psWidget->width() + 2, psWidget->height() + 2);
-		}
-	}
-	retbutstats[psWidget->UserData].flashTime = flashTime;
-	retbutstats[psWidget->UserData].flashing = flashing;
-	retbutstats[psWidget->UserData].downTime = DownTime;
+	if (down) { st.flashing = false; }
+	st.downTime = down ? st.downTime + 1 : 0;
 }
 
 #define REPLAY_ACTION_BUTTONS_PADDING 5
@@ -2378,7 +2417,8 @@ bool intAddReticule()
 		// DedrisReforged (SC2 layout): reticule moved to the TOP-RIGHT, under the energia
 		// chip — the bottom-left corner it used to occupy now holds the minimap. Only the
 		// widget geometry moves; RET_X/RET_Y stay as the anchor for the object/design/etc.
-		psWidget->setGeometry(pie_GetVideoBufferWidth() - RET_FORMWIDTH - 12, 72, RET_FORMWIDTH, RET_FORMHEIGHT);
+		// The labelled grid uses the larger RETGRID_* size (see hci.h).
+		psWidget->setGeometry(pie_GetVideoBufferWidth() - RETGRID_FORMWIDTH - 12, 92, RETGRID_FORMWIDTH, RETGRID_FORMHEIGHT);
 	}));
 	for (int i = 0; i < NUMRETBUTS; i++)
 	{
@@ -2388,11 +2428,11 @@ bool intAddReticule()
 		W_BUTINIT sButInit;
 		sButInit.formID = IDRET_FORM;
 		sButInit.id = ReticuleEnabled[i].id;
-		sButInit.width = RET_BUTWIDTH;
-		sButInit.height = RET_BUTHEIGHT;
+		sButInit.width = ReticuleGrid[i].w;
+		sButInit.height = ReticuleGrid[i].h;
 		sButInit.pDisplay = intDisplayReticuleButton;
-		sButInit.x = ReticuleOffsets[i].x;
-		sButInit.y = ReticuleOffsets[i].y;
+		sButInit.x = ReticuleGrid[i].x;
+		sButInit.y = ReticuleGrid[i].y;
 		sButInit.pTip = retbutstats[i].tip;
 		sButInit.style = WBUT_SECONDARY;
 		sButInit.UserData = i;
@@ -2407,7 +2447,7 @@ bool intAddReticule()
 		}
 		else
 		{
-			setReticuleButtonDimensions(*retbutstats[i].button, retbutstats[i].filename);
+			setReticuleGridGeometry(*retbutstats[i].button);
 		}
 	}
 	ReticuleUp = true;
